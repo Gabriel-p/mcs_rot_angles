@@ -4,7 +4,8 @@ from modules.get_data import get_asteca_data, get_liter_data
 from modules.get_params import params
 from modules.match_clusters import match_clusters
 from modules.galax_struct_dist import gsd
-from modules.make_all_plots import make_angles_plot, make_rho_min_plot
+from modules.make_all_plots import make_angles_plot, make_rho_min_plot,\
+    make_dist_2_cents
 
 
 def make_plots(in_params, bica_coords, cross_match, amr_lit, gal_str_pars,
@@ -17,6 +18,8 @@ def make_plots(in_params, bica_coords, cross_match, amr_lit, gal_str_pars,
     print 'Inclination vs position angles plot done.'
     make_rho_min_plot(rho_plot_pars)
     print 'Rho min plot done.'
+    make_dist_2_cents(in_params)
+    print 'Distances to center of MC done.'
 
 
 def main():
