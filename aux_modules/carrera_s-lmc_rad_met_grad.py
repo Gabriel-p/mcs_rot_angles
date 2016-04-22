@@ -4,13 +4,13 @@ import sys
 import numpy as np
 from astropy.coordinates import Distance, Angle, SkyCoord
 from astropy import units as u
-from deproj_dist import deproj_dist
-from deproj_dist import rho_phi
 # Define main path.
 r_path = os.path.realpath(__file__)[:-41]
 sys.path.insert(0, r_path + '/modules/')
 from lin_fit_conf_bands import weight_linear_fit
 from lin_fit_conf_bands import non_weight_linear_fit
+from deproj_dist import deproj_dist
+from deproj_dist import rho_phi
 
 
 def get_data(name_data):

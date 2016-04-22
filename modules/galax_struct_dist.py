@@ -647,7 +647,7 @@ def gsd(in_params):
             gal_data(ra, dec, dist_cent, e_d_cent, aarr, darr, dsigma, j)
 
         # Input minimum projected angular distance values to use in filter.
-        # The value ia used as: (r_min...]
+        # The value is used as: (r_min...]
         rho_lst = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4.]  # FIXME
         # rho_lst = [0., 0.5, 1.]  # DELETE
         # Select index of r_min value to plot.
@@ -655,15 +655,17 @@ def gsd(in_params):
         for r_idx, r_min in enumerate(rho_lst):
 
             # Filter clusters by distance to center of galaxy.
+            # The rho and phi angles for each cluster depend on the assumed
+            # coordinates for the center of the galaxy.
             ra_f, dec_f, age_f, d_d_f, e_dd_f, dm_f, e_dm_f, rho_f, phi_f =\
                 dist_filter(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g,
                             dm_g, e_dm_g, gal_cent)
 
             # Calculate deprojected distances for all clusters in this galaxy,
             # for all inclination and position angles defined in the grid.
-            # These values only depend on the coordinates of the clusters, the
+            # These values depend on the coordinates of the clusters, the
             # rotation angles that define each inclined plane, and the distance
-            # to the galaxy.
+            # and center coordinates of the galaxy.
             dep_dist_i_PA_vals = i_PA_dist_vals(rho_f, phi_f, inc_lst, pa_lst,
                                                 gal_dist)
 
