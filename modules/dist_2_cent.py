@@ -101,6 +101,12 @@ def dist_2_cloud_center(gal, ra_deg, dec_deg, dist_mod, e_dm):
 
     # 3D distance between cluster and center of galaxy, in parsecs.
     dist_pc = c1.separation_3d(c2)
+
+    # # The above is equivalent to using the cosine law as follows:
+    # rho = c1.separation(c2)
+    # d_pc = np.sqrt(gal_dist**2 + d_clust**2 -
+    #                2*d_clust*gal_dist*np.cos(rho.radian))
+
     # Error for the 3D distance.
     e_d_pc = dist_err_2_pts(dist_pc, c1, e_gal_dist_pc, c2, e_cl_dist_pc)
 

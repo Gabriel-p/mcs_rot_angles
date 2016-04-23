@@ -131,6 +131,8 @@ def plane_equation(inc_lst, pa_lst):
     z' = 0
 
     where x',y',z' are taken from van der Marel & Cioni (2001).
+
+    http://math.stackexchange.com/q/1613472/37846
     '''
 
     a_lst, b_lst, c_lst = [], [], []
@@ -256,7 +258,7 @@ def perp_error(params, xyz):
     """
     a, b, c, d = params
     x, y, z = xyz
-    length = np.sqrt(a**2+b**2+c**2)
+    length = np.sqrt(a**2 + b**2 + c**2)
     return (np.abs(a*x + b*y + c*z + d).sum()/length)/len(x)
 
 
@@ -675,6 +677,8 @@ def gsd(in_params):
 
             # Obtain coordinates of filtered clusters in the (x,y,z) system.
             # Used by two of the methods below.
+            # These coordinates depend on both the center and the distance
+            # to the analyzed galaxy.
             cl_x, cl_y, cl_z = xyz_coords(rho_f, phi_f, gal_dist,
                                           np.asarray(dm_f))
 

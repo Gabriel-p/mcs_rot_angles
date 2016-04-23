@@ -62,3 +62,4 @@ target/
 .ipynb_checkpoints
 
 figures/*.png
+modules/*.png
