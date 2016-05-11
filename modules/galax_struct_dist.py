@@ -1,12 +1,19 @@
 
-from astropy.coordinates import Angle, SkyCoord, Distance
-from astropy import units as u
 import numpy as np
-import deproj_dist as dd
-from MCs_data import MCs_data
-import scipy.interpolate
-import scipy.optimize as optimize
 from tabulate import tabulate
+#
+from MCs_data import MCs_data
+from dist_filter import dist_filter
+from i_PA_grid_dep_dist import i_PA_dist_vals
+from xyz_coords import xyz_coords
+from interp_dens_map import interp_dens_map
+from best_fit_angles import get_angles
+from method1 import m1_ccc_map
+from method2 import m2_fix_plane_perp_dist, plane_equation
+from method3 import m3_min_perp_distance
+from ccc_sum_d_for_best_fit import ccc_sum_d_for_best_fit
+from mc_errors import monte_carlo_errors
+from cov_ellipse import cov_ellipse
 
 
 def inc_PA_grid(N, inc_rang, pa_rang):
@@ -41,570 +48,6 @@ def gal_data(ra, dec, dist_cent, e_d_cent, aarr, darr, dsigma, j):
     return ra_g, dec_g, d_d_g, e_dd_g, age_g, dm_g, e_dm_g, gal_cent, gal_dist
 
 
-def get_rho_phi(ra, dec, gal_cent):
-    '''
-    Obtain projected angular distance from center of galaxy to cluster, and
-    position angle of cluster.
-    '''
-    coords = SkyCoord(zip(*[ra, dec]), unit=(u.deg, u.deg))
-    # Obtain angular projected distance and position angle for the cluster.
-    rho, Phi, phi = dd.rho_phi(coords, gal_cent)
-
-    return rho, phi
-
-
-def dist_filter(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g, dm_g, e_dm_g,
-                gal_cent):
-    """
-    Filter clusters based on their projected angular distances 'rho'.
-
-    Values are used as: (r_min, r_max]
-    """
-
-    # Obtain angular projected distance and position angle for the
-    # clusters in the galaxy.
-    rho_g, phi_g = get_rho_phi(ra_g, dec_g, gal_cent)
-
-    ra_f, dec_f, age_f, d_d_f, e_dd_f, dm_f, e_dm_f, rho_f, phi_f =\
-        [], [], [], [], [], [], [], [], []
-    for i, d in enumerate(d_d_g):
-        # if r_min < rho_g[i].degree <= r_max:
-        if r_min < rho_g[i].degree:
-            ra_f.append(ra_g[i])
-            dec_f.append(dec_g[i])
-            age_f.append(age_g[i])
-            d_d_f.append(d_d_g[i])
-            e_dd_f.append(e_dd_g[i])
-            dm_f.append(dm_g[i])
-            e_dm_f.append(e_dm_g[i])
-            rho_f.append(rho_g[i].degree)
-            phi_f.append(phi_g[i].degree)
-
-    rho_f = Angle(rho_f, unit=u.deg)
-    phi_f = Angle(phi_f, unit=u.deg)
-
-    return ra_f, dec_f, age_f, d_d_f, e_dd_f, dm_f, e_dm_f, rho_f, phi_f
-
-
-def get_deproj_dist(gal_dist, inc, pa, rho, phi):
-    '''
-    Obtain deprojected distance between cluster and the center of the MC
-    in kpc.
-    '''
-    dist_kpc = dd.deproj_dist(pa, inc, gal_dist, rho, phi).value
-
-    return dist_kpc
-
-
-def i_PA_dist_vals(rho, phi, inc_lst, pa_lst, gal_dist):
-    '''
-    Calculate deprojected distance values for each (i, PA) point in the
-    defined grid.
-    '''
-
-    # Create empty list with correct shape.
-    dep_dist_i_PA_vals = [[[] for _ in inc_lst] for _ in pa_lst]
-    for i, inc in enumerate(inc_lst):
-        for j, pa in enumerate(pa_lst):
-            # Assign 'degrees' units before passing.
-            inc, pa = Angle(inc, unit=u.degree), Angle(pa, unit=u.degree)
-
-            # Obtain deprojected distances for all the clusters, in kpc,
-            # using the values of inclination and position angles passed.
-            dep_dist_kpc = get_deproj_dist(gal_dist, inc, pa, rho, phi)
-
-            # Store deprojected distance values.
-            dep_dist_i_PA_vals[i][j] = dep_dist_kpc
-
-    return dep_dist_i_PA_vals
-
-
-def plane_equation(inc_lst, pa_lst):
-    '''
-    Calculate the equation representing the inclined plane for given
-    inclination and position angle values:
-
-    a*x + b*y + c*z + d = 0
-
-    The coefficients for this x',y' plane equation is obtained via:
-
-    z' = 0
-
-    where x',y',z' are taken from van der Marel & Cioni (2001).
-
-    http://math.stackexchange.com/q/1613472/37846
-    '''
-
-    a_lst, b_lst, c_lst = [], [], []
-    for i, inc in enumerate(inc_lst):
-        # Assign 'degrees' units before passing.
-        inc = Angle(inc, unit=u.degree)
-        for j, pa in enumerate(pa_lst):
-            # Assign 'degrees' units before passing.
-            pa = Angle(pa, unit=u.degree)
-
-            # Convert PA (N-->E) to theta (W-->E).
-            theta = pa + Angle('90.d')
-
-            # Obtain coefficients for the inclined x',y' plane.
-            a_lst.append(-1.*np.sin(theta.radian) * np.sin(inc.radian))
-            b_lst.append(np.cos(theta.radian) * np.sin(inc.radian))
-            c_lst.append(np.cos(inc.radian))
-            # This equals 1, so don't pass.
-            # sq = np.sqrt(a**2 + b**2 + c**2)
-
-    plane_abc = [a_lst, b_lst, c_lst]
-
-    return plane_abc
-
-
-def ccc(l1, l2):
-    '''
-    Concordance correlation coefficient.
-    See: https://en.wikipedia.org/wiki/Concordance_correlation_coefficient
-    '''
-    ccc_val = 2 * np.cov(l1, l2)[0, 1] / (np.var(l1) + np.var(l2) +
-                                          (np.mean(l1) - np.mean(l2)) ** 2)
-
-    return ccc_val
-
-
-def ccc_map(dep_dist_i_PA_vals, rand_dist_kpc, N_grid):
-    '''
-    Obtain CCC value comparing the deprojected distances calculated for
-    each plane defined by an inclination and position angle, with the values
-    for the same distance obtained via the distance moduli given by ASteCA.
-    '''
-    ccc_lst = []
-    for i in range(N_grid):
-        for j in range(N_grid):
-            # Retrieve deprojected distance values already calculated, using
-            # the van der Marel & Cioni (2001) equations.
-            dep_dist_kpc = dep_dist_i_PA_vals[i][j]
-
-            # Calculate CCC between deprojected distances using the ASteca
-            # distance moduli + astropy, and those obtained via the van
-            # der Marel & Cioni (2001) equations.
-            c = ccc(dep_dist_kpc, rand_dist_kpc)
-
-            # Store CCC values.
-            ccc_lst.append(c)
-
-    # Pass as numpy array.
-    ccc_lst = np.asarray(ccc_lst)
-
-    return ccc_lst
-
-
-def interp_dens_map(inc_lst, pa_lst, xi, yi, z):
-    '''
-    Interpolate density map of z values into a finer grid.
-    '''
-    # Define interpolating function.
-    N = len(inc_lst)
-    z = z.reshape(N, N)
-    rbs = scipy.interpolate.RectBivariateSpline(inc_lst, pa_lst, z)
-
-    # Get z values on finer grid.
-    zi = rbs(xi, yi)
-
-    return zi
-
-
-def xyz_coords(rho, phi, D_0, r_dist):
-    '''
-    Calculate coordinates in the (x,y,z) system. The x,y plane is parallel
-    the the plane of the sky, and the z axis points towards the observer
-    (see van der Marel & Cioni (2001) and van der Marel et al. (2002)).
-    '''
-    # Convert distance moduli to Kpc.
-    d_kpc = Distance((10**((r_dist + 5.)*0.2)) / 1000., unit=u.kpc)
-
-    # Obtain coordinates.
-    x = d_kpc * np.sin(rho.radian) * np.cos(phi.radian)
-    y = d_kpc * np.sin(rho.radian) * np.sin(phi.radian)
-    z = D_0.kpc*u.kpc - d_kpc*np.cos(rho.radian)
-
-    return x, y, z
-
-
-def fix_plane_perp_dist(plane_abc, x, y, z):
-    '''
-    Calculate the distance to each inclined plane for all the clusters in
-    the galaxy being analysed. Plane equation in the form:
-
-    a*x + b*y + c*z + d = 0
-
-    Pass the averaged sum of the absolute values of each distance, for each
-    inclination and position angle values.
-
-    http://mathworld.wolfram.com/Point-PlaneDistance.html
-    '''
-    # Unpack lists of inclined planes coefficients.
-    a_lst, b_lst, c_lst = plane_abc
-    # Calculate the averaged sum of (positive) distances to each inclined
-    # plane.
-    pl_dists_kpc = np.sum(abs(np.outer(a_lst, x) + np.outer(b_lst, y) +
-                              np.outer(c_lst, z)), axis=1)/len(x)
-
-    return pl_dists_kpc
-
-
-def perp_error(params, xyz):
-    """
-    Return the averaged sum of the absolute values for the perpendicular
-    distance of the points in 'xyz', to the plane defined by the
-    coefficients 'a,b,c,d'.
-    """
-    a, b, c, d = params
-    x, y, z = xyz
-    length = np.sqrt(a**2 + b**2 + c**2)
-    return (np.abs(a*x + b*y + c*z + d).sum()/length)/len(x)
-
-
-def minimize_perp_distance(x, y, z, N_min):
-    """
-    Find coefficients of best plane fit to given points. Plane equation is
-    in the form:
-
-    a*x + b*t + c*z + d = 0
-
-    and the minimization is done for the perpendicular distances to the plane.
-
-    Source: http://stackoverflow.com/a/35118683/1391441
-    """
-    def unit_length(params):
-        a, b, c, d = params
-        return a**2 + b**2 + c**2 - 1
-
-    # Remove units from the x,y,z coordinates of the points passed.
-    x, y, z = x.value, y.value, z.value
-
-    # Random initial guess for the coefficients.
-    initial_guess = np.random.uniform(-10., 10., 4)
-
-    # # Similar as the block below, but using a simpler random sampling
-    # # algorithm. In several tests both methods gave the same coefficients,
-    # # with this one occasionally failing.
-    # # This algorithm is 4-5 times faster than the Basin-Hopping one.
-    # # Leave it here to remember I tried.
-
-    # results = []
-    # for _ in xrange(50):
-
-    #     # Generate a new random initial guess every 10 runs.
-    #     if _ in [10, 20, 30, 40]:
-    #         initial_guess = np.random.uniform(-10., 10., 4)
-
-    #     # Constrain the vector perpendicular to the plane be of unit length
-    #     cons = ({'type': 'eq', 'fun': unit_length})
-    #     sol = optimize.minimize(perp_error, initial_guess, args=[x, y, z],
-    #                             constraints=cons)
-
-    #     # Extract minimized coefficients.
-    #     abcd = list(sol.x)
-    #     # Update initial guess.
-    #     initial_guess = abcd
-    #     # Save coefficients and the summed abs distance to the plane.
-    #     results.append([abcd, perp_error(list(sol.x), [x, y, z])])
-
-    # # Select the coefficients with the minimum value for the summed absolute
-    # # distance to plane.
-    # abcd = min(results, key=lambda x: x[1])[0]
-
-    # Use Basin-Hopping to obtain the best fir coefficients.
-    cons = ({'type': 'eq', 'fun': unit_length})
-    min_kwargs = {"constraints": cons, "args": [x, y, z]}
-    sol = optimize.basinhopping(
-        perp_error, initial_guess, minimizer_kwargs=min_kwargs, niter=N_min)
-    abcd = list(sol.x)
-
-    return abcd
-
-
-def angle_betw_planes(plane_abcd):
-    """
-    The dihedral angle (inclination) is the angle between two planes
-
-    http://mathworld.wolfram.com/DihedralAngle.html
-
-    http://stackoverflow.com/q/2827393/1391441
-    """
-
-    # Normal vector to the a,b,c,d plane.
-    a, b, c, d = plane_abcd
-
-    # Counter clockwise rotation angle around the z axis.
-    # 0. <= theta <= 180.
-    if d != 0.:
-        x_int, y_int = -d/a, -d/b
-        if y_int > 0.:
-            t = 180. - np.arctan2(y_int, x_int)*180./np.pi
-        elif y_int < 0.:
-            t = abs(np.arctan2(y_int, x_int)*180./np.pi)
-    else:
-        x_int, y_int = 1., -a/b
-        if y_int > 0.:
-            t = np.arctan2(y_int, x_int)*180./np.pi
-        elif y_int < 0.:
-            t = np.arctan2(y_int, x_int)*180./np.pi + 180.
-    theta = Angle(t, unit='degree')
-
-    # Set theta to correct range [90., 270.] (given that the position angle's
-    # range is [0., 180.])
-    if theta.degree < 90.:
-        n = int((90. - theta.degree)/180.) + 1
-        theta = theta + n*Angle('180.d')
-    # Pass position angle (PA) instead of theta, to match the other methods.
-    # We use the theta = PA + 90 convention.
-    PA = theta - Angle('90.d')
-
-    # Clockwise rotation angle around the x' axis.
-    # Obtain the inclination with the correct sign.
-    if c != 0.:
-        # Normal vector to inclined plane.
-        v1 = [a/c, b/c, 1.]
-        # theta = 90.d
-        if b == 0.:
-            if a/c > 0.:
-                sign = 'neg'
-            elif a/c < 0.:
-                sign = 'pos'
-            else:
-                sign = 'no'
-        else:
-            # 90. < theta < 270.
-            if b/c > 0.:
-                sign = 'neg'
-            elif b/c < 0.:
-                sign = 'pos'
-
-        # Set correct sign for inclination angle.
-        if sign == 'pos':
-            # Vector normal to the z=0 plane, ie: the x,y plane.
-            # This results in a positive i value.
-            v2 = [0, 0, 1]
-        elif sign == 'neg':
-            # This results in a negative i value.
-            v2 = [0, 0, -1]
-        else:
-            # This means i=0.
-            v2 = v1
-
-        i = np.arccos(np.dot(v1, v2) / np.sqrt(np.dot(v1, v1)*np.dot(v2, v2)))
-        inc = Angle(i*u.radian, unit='degree')
-
-    else:
-        inc = Angle(90., unit='degree')
-    # 0. <= inc <= 180.
-
-    # Set inclination angles to correct ranges [-90, 90]
-    if inc.degree > 90.:
-        inc = Angle(i*u.radian, unit='degree') - Angle('180.d')
-
-    return inc.degree, PA.degree
-
-
-def best_fit_angles(method, best_angles_pars):
-    '''
-    Obtain inclination and position angles associated with the maximum CCC
-    value in this map.
-    '''
-    if method == 'deproj_dists':
-        xi, yi, zi = best_angles_pars
-        # Obtain index of maximum density value.
-        max_ccc_idx = np.unravel_index(zi.argmax(), zi.shape)
-        # Calculate "best" angle values.
-        inc_b, pa_b = xi[max_ccc_idx[0]], yi[max_ccc_idx[1]]
-        # Max CCC value in map.
-        # z_b = np.amax(zi)
-    elif method == 'perp_d_fix_plane':
-        xi, yi, zi = best_angles_pars
-        # Obtain index of minimum sum of absolute distances to plane value.
-        min_d_idx = np.unravel_index(zi.argmin(), zi.shape)
-        # Calculate "best" angle values.
-        inc_b, pa_b = xi[min_d_idx[0]], yi[min_d_idx[1]]
-        # Min sum of abs(distances 2 plane) value in map.
-        # z_b = np.amin(zi)
-    elif method == 'perp_d_free_plane':
-        plane_abcd = best_angles_pars
-        inc_b, pa_b = angle_betw_planes(plane_abcd)
-
-    return inc_b, pa_b
-
-
-def draw_rand_dep_dist(d_g, e_d_g):
-    '''
-    Take each 3D distance between a cluster and the center of the galaxy,
-    and normally draw a random value using its error as the standard deviation.
-    '''
-    rand_dist = []
-    for mu, std in zip(*[d_g, e_d_g]):
-        r_dist = np.random.normal(mu, std)
-        # Don't store negative distances.
-        rand_dist.append(max(0., r_dist))
-
-    return rand_dist
-
-
-def draw_rand_dist_mod(dm_g, e_dm_g):
-    """
-    Draw random distance moduli assuming a normal distribution of the errors.
-    """
-    r_dist = np.random.normal(np.asarray(dm_g), np.asarray(e_dm_g))
-
-    return r_dist
-
-
-def monte_carlo_errors(N_maps, method, params):
-    """
-    Obtain N_maps angles-CCC density maps, by randomly sampling
-    the distance to each cluster before calculating the CCC.
-    """
-
-    # Unpack params.
-    if method == 'deproj_dists':
-        N_grid, inc_lst, pa_lst, xi, yi, d_f, e_d_f, dep_dist_i_PA_vals =\
-            params
-    elif method == 'perp_d_fix_plane':
-        inc_lst, pa_lst, xi, yi, dm_f, e_dm_f, rho_f, phi_f, gal_dist,\
-            plane_abc = params
-    elif method == 'perp_d_free_plane':
-        dm_f, e_dm_f, rho_f, phi_f, gal_dist, N_min = params
-
-    inc_pa_mcarlo = []
-    milestones = [0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    for _ in range(N_maps):
-
-        if method == 'deproj_dists':
-            # Draw random deprojected distances (in Kpc), obtained via the
-            # ASteCA distance moduli + astropy.
-            rand_dist = draw_rand_dep_dist(d_f, e_d_f)
-            # Obtain density map of CCC (z) values.
-            z = ccc_map(dep_dist_i_PA_vals, rand_dist, N_grid)
-
-            # Obtain (finer) interpolated angles-CCC density map.
-            # Rows in zi correspond to inclination values.
-            # Columns correspond to position angle values.
-            zi = interp_dens_map(inc_lst, pa_lst, xi, yi, z)
-
-            # Store values of inclination and position angles for the
-            # interpolated map.
-            best_angles_pars = [xi, yi, zi]
-
-        elif method == 'perp_d_fix_plane':
-            # Draw random distances moduli, obtained via ASteCA.
-            rand_dist = draw_rand_dist_mod(dm_f, e_dm_f)
-            # Positions in the (x,y,z) system.
-            x, y, z = xyz_coords(rho_f, phi_f, gal_dist, rand_dist)
-            # Obtain density map (z), composed of the sum of the absolute
-            # values of the distances to each plane.
-            z = fix_plane_perp_dist(plane_abc, x, y, z)
-            zi = interp_dens_map(inc_lst, pa_lst, xi, yi, z)
-            best_angles_pars = [xi, yi, zi]
-
-        elif method == 'perp_d_free_plane':
-            # Draw random distances moduli, obtained via ASteCA.
-            rand_dist = draw_rand_dist_mod(dm_f, e_dm_f)
-            # Obtain randomly drawn coords in the (x, y, z) sustem.
-            x, y, z = xyz_coords(rho_f, phi_f, gal_dist, rand_dist)
-            # Store params used to obtain the Monte Carlo errors.
-            best_angles_pars = minimize_perp_distance(x, y, z, N_min)
-
-        inc_b, pa_b = best_fit_angles(method, best_angles_pars)
-
-        inc_pa_mcarlo.append([inc_b, pa_b])
-
-        # Print percentage done.
-        percentage_complete = (100. * (_ + 1) / N_maps)
-        while len(milestones) > 0 and \
-                percentage_complete >= milestones[0]:
-            # print " {:>3}% done".format(milestones[0])
-            # Remove that milestone from the list.
-            milestones = milestones[1:]
-
-    return inc_pa_mcarlo
-
-
-def eigsorted(cov):
-    '''
-    Eigenvalues and eigenvectors of the covariance matrix.
-    '''
-    vals, vecs = np.linalg.eigh(cov)
-    order = vals.argsort()[::-1]
-    return vals[order], vecs[:, order]
-
-
-def cov_ellipse(points, nstd=1):
-    """
-    Generate an `nstd` sigma ellipse based on the mean and covariance of a
-    point "cloud".
-
-    source: http://stackoverflow.com/a/12321306/1391441
-
-    Parameters
-    ----------
-        points : An Nx2 array of the data points.
-        nstd : The radius of the ellipse in numbers of standard deviations.
-               Defaults to 1 standard deviations.
-    """
-    points = np.asarray(points)
-
-    # Location of the center of the ellipse.
-    mean_pos = points.mean(axis=0)
-
-    # The 2x2 covariance matrix to base the ellipse on.
-    cov = np.cov(points, rowvar=False)
-
-    vals, vecs = eigsorted(cov)
-    theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
-
-    # Width and height are "full" widths, not radius
-    width, height = 2 * nstd * np.sqrt(vals)
-
-    return mean_pos, width, height, theta
-
-
-def ccc_sum_d_for_best_fit(gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
-                           best_angles_pars, inc_b, pa_b, method):
-    """
-    For the best fit angles obtained with this method, calculate:
-
-    1. The CCC coefficient comparing the deprojected distances on the fitted
-    plane with the ASteCA+astropy distances.
-    2. The sum of absolute values of the perpendicular distances to the plane.
-
-    Return also the deprojected distances on the fitted plane, for plotting.
-    """
-    # Deprojected distances obtained using the best-fit angles.
-    # THIS ASSUMES THAT THE INCLINED PLANE IS OBTAINED BY ROTATING TWICE
-    # THE (x,y,z) SYSTEM. THE VALUES GIVEN FOR THE ANGLES OBTAINED WITH THE
-    # FREE PLANE BEST FIT METHOD WILL THUS REPRESENT AN APPROXIMATION OF
-    # THE ACTUAL VALUES IF THE (x',y') PLANE INTERSECTED THE (x,y) PLANE
-    # THROUGH THE ORIGIN (ie: IF  d=0 IN THE PLANE'S EQUATION)
-    dep_dist_kpc = get_deproj_dist(
-        gal_dist, Angle(inc_b, unit=u.degree),
-        Angle(pa_b, unit=u.degree), rho_f, phi_f)
-    # CCC value for the best fit angles.
-    ccc_b = ccc(dep_dist_kpc, d_d_f)
-
-    xyz = [cl_x.value, cl_y.value, cl_z.value]
-    if method in ['deproj_dists', 'perp_d_fix_plane']:
-        # Convert best fit PA to theta.
-        theta = pa_b + 90.
-        # Plane coefficients according to Eq (6) in vdM&C01 for z'=0.
-        a = -1.*np.sin(np.deg2rad(theta))*np.sin(np.deg2rad(inc_b))
-        b = np.cos(np.deg2rad(theta))*np.sin(np.deg2rad(inc_b))
-        c = np.cos(np.deg2rad(inc_b))
-        d = 0.
-        abcd = [a, b, c, d]
-        sum_d_b = perp_error(abcd, xyz)
-    elif method == 'perp_d_free_plane':
-        sum_d_b = perp_error(best_angles_pars, xyz)
-
-    return dep_dist_kpc, ccc_b, sum_d_b
-
-
 def gsd(in_params):
     '''
     Calculate the best match for the inclination and position angles of the
@@ -624,6 +67,10 @@ def gsd(in_params):
     # Obtain grid of inclination and position angles of size: N x N
     N_grid = 20  # FIXME
     inc_lst, pa_lst = inc_PA_grid(N_grid, inc_rang, pa_rang)
+
+    # Obtain coefficients for the plane equation defined by each combination
+    # of rotation (inc, PA) angles.
+    plane_abc = plane_equation(inc_lst, pa_lst)
 
     # Obtain *denser/finer* grid of inclination and position angles.
     N_f = 200
@@ -671,10 +118,6 @@ def gsd(in_params):
             dep_dist_i_PA_vals = i_PA_dist_vals(rho_f, phi_f, inc_lst, pa_lst,
                                                 gal_dist)
 
-            # Obtain coefficients for the plane equation defined by each
-            # combination of rotation (inc, PA) angles.
-            plane_abc = plane_equation(inc_lst, pa_lst)
-
             # Obtain coordinates of filtered clusters in the (x,y,z) system.
             # Used by two of the methods below.
             # These coordinates depend on both the center and the distance
@@ -689,12 +132,12 @@ def gsd(in_params):
                            'perp_d_free_plane']:
                 if method == 'deproj_dists':
                     # Store params used to obtain the Monte Carlo errors.
-                    params = [N_grid, inc_lst, pa_lst, xi, yi, d_d_f, e_dd_f,
-                              dep_dist_i_PA_vals]
+                    mc_pars = [N_grid, inc_lst, pa_lst, xi, yi, d_d_f, e_dd_f,
+                               dep_dist_i_PA_vals]
 
                     # Store CCC density map obtained using the distance values
                     # with no random sampling.
-                    ccc_vals = ccc_map(dep_dist_i_PA_vals, d_d_f, N_grid)
+                    ccc_vals = m1_ccc_map(dep_dist_i_PA_vals, d_d_f, N_grid)
                     # Interpolate density map into finer/denser grid.
                     dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
                                                        ccc_vals)
@@ -703,13 +146,13 @@ def gsd(in_params):
 
                 elif method == 'perp_d_fix_plane':
                     # Store params used to obtain the Monte Carlo errors.
-                    params = [inc_lst, pa_lst, xi, yi, dm_f, e_dm_f, rho_f,
-                              phi_f, gal_dist, plane_abc]
+                    mc_pars = [inc_lst, pa_lst, xi, yi, dm_f, e_dm_f, rho_f,
+                               phi_f, gal_dist, plane_abc]
 
                     # Store density map obtained using the distance values with
                     # no random sampling.
-                    pl_dists_kpc = fix_plane_perp_dist(plane_abc, cl_x, cl_y,
-                                                       cl_z)
+                    pl_dists_kpc = m2_fix_plane_perp_dist(plane_abc, cl_x,
+                                                          cl_y, cl_z)
                     # Interpolate density map into finer/denser grid.
                     dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
                                                        pl_dists_kpc)
@@ -718,34 +161,33 @@ def gsd(in_params):
 
                 elif method == 'perp_d_free_plane':
                     # Store params used to obtain the Monte Carlo errors.
-                    params = [dm_f, e_dm_f, rho_f, phi_f, gal_dist, N_min]
+                    mc_pars = [dm_f, e_dm_f, rho_f, phi_f, gal_dist, N_min]
 
                     # Obtain a,b,c,d coefficients for the best fit plane,
                     # given the set of clusters passed in the (x,y,z) system.
                     # The best fit is obtained minimizing the perpendicular
                     # distance to the plane.
-                    best_angles_pars = minimize_perp_distance(cl_x, cl_y,
-                                                              cl_z, N_min)
+                    best_angles_pars = m3_min_perp_distance(cl_x, cl_y,
+                                                            cl_z, N_min)
 
-                    # Obtain density map from the 'perp_d_fix_plane' method.
-                    # Used for plotting since this method doesn't generate a
-                    # density map.
-                    pl_dists_kpc = fix_plane_perp_dist(plane_abc, cl_x, cl_y,
-                                                       cl_z)
+                    # Obtain density map from Method 2. Used for plotting a
+                    # density map, since Method 3 doesn't generate one.
+                    pl_dists_kpc = m2_fix_plane_perp_dist(plane_abc, cl_x,
+                                                          cl_y, cl_z)
                     dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
                                                        pl_dists_kpc)
 
                 # Best fit angles for the density map with no random sampling.
-                inc_b, pa_b = best_fit_angles(method, best_angles_pars)
+                inc_b, pa_b = get_angles(method, best_angles_pars)
                 # Save best fit angles obtained with all methods. Their
                 # average is the final value for each rotation angle.
                 inc_best.append(inc_b)
                 pa_best.append(pa_b)
 
-                # Retrieve the CCC value and the sum of the abs values of the
-                # deprojected distances, for the distances obtained with the
-                # best fit rotation angles versus the ones given by
-                # ASteCA + astropy.
+                # Retrieve the CCC value and the sum of the abs values of
+                # the deprojected distances, for the distances obtained
+                # with the best fit rotation angles versus the ones given
+                # by ASteCA + astropy.
                 dep_dist_kpc, ccc_b, sum_d_b = ccc_sum_d_for_best_fit(
                     gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
                     best_angles_pars, inc_b, pa_b, method)
@@ -753,7 +195,7 @@ def gsd(in_params):
 
                 # Obtain distribution of rotation angles via Monte Carlo random
                 # sampling.
-                inc_pa_mcarlo = monte_carlo_errors(N_maps, method, params)
+                inc_pa_mcarlo = monte_carlo_errors(N_maps, method, mc_pars)
                 # Standard deviations for the angles for *each* method.
                 mc_inc_std.append(np.std(zip(*inc_pa_mcarlo)[0]))
                 mc_pa_std.append(np.std(zip(*inc_pa_mcarlo)[1]))
@@ -774,11 +216,11 @@ def gsd(in_params):
 
                 # Store parameters for density maps and 1:1 diagonal plots.
                 if r_idx == r_idx_save:
-
+                    # Density maps.
                     gal_str_pars[0].append([xmin, xmax, ymin, ymax, xi, yi,
                                            dens_vals_interp, [inc_b, pa_b],
                                            i_pa_std, width, height, theta])
-
+                    # Identity 1:1 plots.
                     # Append dummy values at the end.
                     gal_str_pars[1].append([0.1, 7.95, 0.01, 7.95, d_d_f,
                                            dep_dist_kpc, age_f, ccc_sum_d_best,
