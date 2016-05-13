@@ -33,7 +33,7 @@ def m3_min_perp_distance(x, y, z, N_min):
     # Remove units from the x,y,z coordinates of the points passed.
     x, y, z = x.value, y.value, z.value
 
-    # Random initial guess for the coefficients.
+    # Random initial guess for the a,b,c,d plane coefficients.
     initial_guess = np.random.uniform(-10., 10., 4)
 
     # # Similar as the block below, but using a simpler random sampling
@@ -65,7 +65,7 @@ def m3_min_perp_distance(x, y, z, N_min):
     # # distance to plane.
     # abcd = min(results, key=lambda x: x[1])[0]
 
-    # Use Basin-Hopping to obtain the best fir coefficients.
+    # Use Basin-Hopping to obtain the best fit coefficients.
     cons = ({'type': 'eq', 'fun': unit_length})
     min_kwargs = {"constraints": cons, "args": [x, y, z]}
     sol = optimize.basinhopping(

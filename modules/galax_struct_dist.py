@@ -65,7 +65,7 @@ def gsd(in_params):
     ymin, ymax = pa_rang[0] - 0.1, pa_rang[1] + 0.1
 
     # Obtain grid of inclination and position angles of size: N x N
-    N_grid = 20  # FIXME
+    N_grid = 40  # FIXME
     inc_lst, pa_lst = inc_PA_grid(N_grid, inc_rang, pa_rang)
 
     # Obtain coefficients for the plane equation defined by each combination
@@ -78,18 +78,19 @@ def gsd(in_params):
 
     # Number of iterations for the minimization algorithm that searches for the
     # best plane fit to the clusters, with no constrains imposed.
-    N_min = 5  # FIXME
+    # Default is 100
+    N_min = 100  # FIXME
 
     # Number of Monte Carlo runs, where the distance to each
     # cluster is randomly drawn from a normal probability distribution.
     # This is used to assign errors to the best fit angle values.
-    N_maps = 5  # FIXME
+    N_maps = 100  # FIXME
 
     # Store parameters needed for plotting the density maps and 1:1 diagonal
     # plots of deprojected distance in Kpc, as well as the r_min plots.
     gal_str_pars, rho_plot_pars, table = [[], []], [[], []], []
     for j in [0, 1]:  # SMC, LMC = 0, 1
-        print 'Galaxy:', j
+        print '\nGalaxy:', j
 
         # Retrieve data for this galaxy.
         ra_g, dec_g, d_d_g, e_dd_g, age_g, dm_g, e_dm_g, gal_cent, gal_dist =\
@@ -98,7 +99,6 @@ def gsd(in_params):
         # Input minimum projected angular distance values to use in filter.
         # The value is used as: (r_min...]
         rho_lst = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4.]  # FIXME
-        # rho_lst = [0., 0.5, 1.]  # DELETE
         # Select index of r_min value to plot.
         r_idx_save = 2
         for r_idx, r_min in enumerate(rho_lst):
@@ -117,6 +117,9 @@ def gsd(in_params):
             # and center coordinates of the galaxy.
             dep_dist_i_PA_vals = i_PA_dist_vals(rho_f, phi_f, inc_lst, pa_lst,
                                                 gal_dist)
+            print('vdm&C01 deprojected distances obtained for the defined\n'
+                  'grid of rotation angles. Minimum angular distance\n'
+                  'allowed: {}'.format(r_min))
 
             # Obtain coordinates of filtered clusters in the (x,y,z) system.
             # Used by two of the methods below.
@@ -183,11 +186,12 @@ def gsd(in_params):
                 # average is the final value for each rotation angle.
                 inc_best.append(inc_b)
                 pa_best.append(pa_b)
+                print('  Best fit for rotation angles obtained.')
 
                 # Retrieve the CCC value and the sum of the abs values of
-                # the deprojected distances, for the distances obtained
-                # with the best fit rotation angles versus the ones given
-                # by ASteCA + astropy.
+                # the deprojected distances, for the distances to the plane
+                # generated via the best fit rotation angles, versus the
+                # ones given by ASteCA + astropy.
                 dep_dist_kpc, ccc_b, sum_d_b = ccc_sum_d_for_best_fit(
                     gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
                     best_angles_pars, inc_b, pa_b, method)
@@ -199,9 +203,10 @@ def gsd(in_params):
                 # Standard deviations for the angles for *each* method.
                 mc_inc_std.append(np.std(zip(*inc_pa_mcarlo)[0]))
                 mc_pa_std.append(np.std(zip(*inc_pa_mcarlo)[1]))
-                # Save inclination and position angles obtained via the Monte
-                # Carlo process. Combining values from *all* methods, we
-                # calculate the combined standard deviation for each angle.
+                print('  Errors obtained.')
+
+                # Save *combined* inclination and position angles obtained via
+                # the Monte  Carlo process. Used jusr for printing stats.
                 in_mcarlo = in_mcarlo + list(zip(*inc_pa_mcarlo)[0])
                 pa_mcarlo = pa_mcarlo + list(zip(*inc_pa_mcarlo)[1])
 
@@ -226,31 +231,25 @@ def gsd(in_params):
                                            dep_dist_kpc, age_f, ccc_sum_d_best,
                                            '', '', '', ''])
 
+                print('{} method processed.'.format(method))
+
             # Number of clusters used in this run. Used for plotting.
             N_clust = len(ra_f)
 
-            # # Mean and standard deviation for the rotation angles.
-            # inc_std = np.std(in_mcarlo)
-            # pa_std = np.std(pa_mcarlo)
-            # # Pass best fit CCC values for colorbar.
-            # ccc_best = zip(*ccc_sum_d_best)[0]
-            # # Store parameters for plotting.
-            # rho_plot_pars[j].append([r_min, N_clust, inc_best, inc_std,
-            #                          pa_best, pa_std, ccc_best])
-
-            # Mean and standard deviation for the rotation angles.
-            inc_mean, inc_std = np.mean(inc_best), np.std(in_mcarlo)
-            pa_mean, pa_std = np.mean(pa_best), np.std(pa_mcarlo)
-            # perp_sum_mean = np.mean(zip(*ccc_sum_d_best)[1])
+            # Extract values for averaged sums of perpendicular distances for
+            # each method, for this r_min value.
             perp_sum = zip(*ccc_sum_d_best)[1]
             # Store parameters for plotting.
-            rho_plot_pars[j].append([r_min, N_clust, inc_best, inc_std,
-                                     pa_best, pa_std, perp_sum])
+            rho_plot_pars[j].append([r_min, N_clust, inc_best, mc_inc_std,
+                                     pa_best, mc_pa_std, perp_sum])
 
-            print 'rho min=', r_min
+            # Print info on fit.
             print 'CCC/Perp sum=', ccc_sum_d_best
             print 'PA Best, MC std:', pa_best, mc_pa_std
             print 'Inc best, MC std:', inc_best, mc_inc_std
+            # Mean and standard deviation for the rotation angles.
+            inc_mean, inc_std = np.mean(inc_best), np.std(in_mcarlo)
+            pa_mean, pa_std = np.mean(pa_best), np.std(pa_mcarlo)
             print 'PA combined MC:', pa_mean, pa_std
             print 'Inc combined MC:', inc_mean, inc_std, '\n'
 

@@ -81,7 +81,8 @@ def monte_carlo_errors(N_maps, method, params):
         elif method == 'perp_d_free_plane':
             # Draw random distances moduli, obtained via ASteCA.
             rand_dist = draw_rand_dist_mod(dm_f, e_dm_f)
-            # Obtain randomly drawn coords in the (x, y, z) sustem.
+            # Obtain coords in the (x, y, z) system, using the random
+            # distance moduli values.
             x, y, z = xyz_coords(rho_f, phi_f, gal_dist, rand_dist)
             # Store params used to obtain the Monte Carlo errors.
             best_angles_pars = m3_min_perp_distance(x, y, z, N_min)
