@@ -241,10 +241,11 @@ def gsd(in_params):
             # Mean and standard deviation for the rotation angles.
             inc_mean, inc_std = np.mean(inc_best), np.std(in_mcarlo)
             pa_mean, pa_std = np.mean(pa_best), np.std(pa_mcarlo)
-            perp_sum_mean = np.mean(zip(*ccc_sum_d_best)[1])
+            # perp_sum_mean = np.mean(zip(*ccc_sum_d_best)[1])
+            perp_sum = zip(*ccc_sum_d_best)[1]
             # Store parameters for plotting.
-            rho_plot_pars[j].append([r_min, N_clust, inc_mean, inc_std,
-                                     pa_mean, pa_std, perp_sum_mean])
+            rho_plot_pars[j].append([r_min, N_clust, inc_best, inc_std,
+                                     pa_best, pa_std, perp_sum])
 
             print 'rho min=', r_min
             print 'CCC/Perp sum=', ccc_sum_d_best
