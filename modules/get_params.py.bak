@@ -1,6 +1,7 @@
 
 import numpy as np
-from modules.dist_2_cent import dist_2_cloud_center
+from functions.photom_dispersion import get_disp
+from functions.dist_2_cent import dist_2_cloud_center
 
 
 def float_str(val):
@@ -69,23 +70,23 @@ def params(r_path, as_names, as_pars, cl_dict, names_idx):
     ra_i, dec_i, gal_i, l_zi, l_zei, l_ai, l_aei, l_ei, l_eei, l_di, l_dei, \
         l_rad, l_scale, l_e_sandf, l_e_e_sandf, l_e_mcev, l_e_mcev_max, \
         l_e_e_mcev, l_mcev_dist, l_mass, l_e_mass = \
-        cl_dict[0].index('ra_deg'), cl_dict[0].index('dec_deg'), \
-        cl_dict[0].index('Galaxia'), cl_dict[0].index('[Fe/H] (dex)'), \
-        cl_dict[0].index('e_Fe/H'), cl_dict[0].index('log(age)'), \
-        cl_dict[0].index('e_log(age)'), cl_dict[0].index('E(B-V) (lit)'), \
-        cl_dict[0].index('e_E(B-V)'), cl_dict[0].index('(m-M)o (mag)'), \
-        cl_dict[0].index('e_(m-M)o'), cl_dict[0].index('rad (eye)'), \
-        cl_dict[0].index('arcsec/pixel'), cl_dict[0].index('E_B_V_SandF'), \
-        cl_dict[0].index('stdev_E_B_V_SandF'), \
-        cl_dict[0].index('E_BV_closer_MCEV'), cl_dict[0].index('E_BV_max'), \
-        cl_dict[0].index('E_BV_std_dev'), cl_dict[0].index('Dist (deg)'), \
-        cl_dict[0].index('Mass'), cl_dict[0].index('e_mass')
+        cl_dict[0].index(u'ra_deg'), cl_dict[0].index(u'dec_deg'), \
+        cl_dict[0].index(u'Galaxia'), cl_dict[0].index(u'[Fe/H] (dex)'), \
+        cl_dict[0].index(u'e_Fe/H'), cl_dict[0].index(u'log(age)'), \
+        cl_dict[0].index(u'e_log(age)'), cl_dict[0].index(u'E(B-V) (lit)'), \
+        cl_dict[0].index(u'e_E(B-V)'), cl_dict[0].index(u'(m-M)o (mag)'), \
+        cl_dict[0].index(u'e_(m-M)o'), cl_dict[0].index(u'rad (eye)'), \
+        cl_dict[0].index(u'arcsec/pixel'), cl_dict[0].index(u'E_B_V_SandF'), \
+        cl_dict[0].index(u'stdev_E_B_V_SandF'), \
+        cl_dict[0].index(u'E_BV_closer_MCEV'), cl_dict[0].index(u'E_BV_max'), \
+        cl_dict[0].index(u'E_BV_std_dev'), cl_dict[0].index(u'Dist (deg)'), \
+        cl_dict[0].index(u'Mass'), cl_dict[0].index(u'e_mass')
 
     # Initialize empty lists. The first sub-list in the parameters list
     # corresponds to clusters in the SMC and the second to those in the LMC.
     gal_names, int_colors, n_memb, cont_ind, kde_prob, ra, dec, rad_pc, \
-        erad_pc, dist_cent, e_d_cent, r_core_pc, e_r_core = \
-        [[[], []] for _ in range(13)]
+        erad_pc, dist_cent, e_d_cent, r_core_pc, e_r_core, phot_disp = \
+        [[[], []] for _ in range(14)]
     # First sub-list stores SMC values, the second one stores LMC values.
     # First and 2nd sub-sublist store Schlafly & Finkbeiner extinction values
     # and their errors. Third and 4th store MCEV extinction values and their
@@ -168,6 +169,10 @@ def params(r_path, as_names, as_pars, cl_dict, names_idx):
         dist_cent[j].append(d_c.value)
         e_d_cent[j].append(e_d_c.value)
 
+        # Get photometric dispersion parameter.
+        phot_disp[j].append(get_disp(r_path, as_names[i]))
+        # phot_disp[j].append(0.)
+
         # Organize param values, ASteCA first, lit second.
         met = [as_p[a_zi], cl_dict[names_idx[i]][l_zi]]
         smet = [as_p[a_zei], cl_dict[names_idx[i]][l_zei]]
@@ -213,7 +218,7 @@ def params(r_path, as_names, as_pars, cl_dict, names_idx):
         'rad_pc': rad_pc, 'erad_pc': erad_pc, 'int_colors': int_colors,
         'n_memb': n_memb, 'cont_ind': cont_ind, 'kde_prob': kde_prob,
         'dist_cent': dist_cent, 'e_d_cent': e_d_cent, 'r_core_pc': r_core_pc,
-        'e_r_core': e_r_core
+        'e_r_core': e_r_core, 'phot_disp': phot_disp
     }
 
     return pars_dict

@@ -218,7 +218,7 @@ if __name__ == "__main__":
 
     ra, dec = np.random.uniform(9., 13., 10),\
         np.random.uniform(-65., -72., 10)
-    coords = SkyCoord(list(zip(*[ra, dec])), unit=(u.deg, u.deg))
+    coords = SkyCoord(zip(*[ra, dec]), unit=(u.deg, u.deg))
     gal_cent = SkyCoord('0h52m42s', '-72d49m', frame='icrs')
     rho, Phi, phi = rho_phi(coords, gal_cent)
     glx_PA, glx_incl, glx_dist = Angle('34.7d'), Angle('189.3d'),\

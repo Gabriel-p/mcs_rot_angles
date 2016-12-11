@@ -5,7 +5,7 @@ import numpy as np
 try:
     from functions.MCs_data import MCs_data
 except:
-    from .MCs_data import MCs_data
+    from MCs_data import MCs_data
 
 
 def dist_err_mag_2_pc(d_pc, e_dm, e_E):

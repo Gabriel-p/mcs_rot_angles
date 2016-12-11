@@ -1,11 +1,11 @@
 
 import numpy as np
-from .interp_dens_map import interp_dens_map
-from .xyz_coords import xyz_coords
-from .best_fit_angles import get_angles
-from .method1 import m1_ccc_map
-from .method2 import m2_fix_plane_perp_dist
-from .method3 import m3_min_perp_distance
+from interp_dens_map import interp_dens_map
+from xyz_coords import xyz_coords
+from best_fit_angles import get_angles
+from method1 import m1_ccc_map
+from method2 import m2_fix_plane_perp_dist
+from method3 import m3_min_perp_distance
 
 
 def draw_rand_dep_dist(d_g, e_d_g):

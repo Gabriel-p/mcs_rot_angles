@@ -6,7 +6,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.offsetbox as offsetbox
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
-from . import lin_fit_conf_bands as lf_cb
+import lin_fit_conf_bands as lf_cb
 
 
 def plot_dist_2_cent(pl_params):
@@ -381,8 +381,9 @@ def make_angles_plot(gal_str_pars):
         diag_plots(pl_params)
 
     fig.tight_layout()
-    plt.savefig('figures/MCs_deproj_dist_angles.png', dpi=300,
-                bbox_inches='tight')
+    # plt.savefig('figures/MCs_deproj_dist_angles.png', dpi=300,
+    #             bbox_inches='tight')
+    plt.savefig('MCs_deproj_dist_angles.png', dpi=300, bbox_inches='tight')
 
 
 def pl_rho_var(in_pars):
@@ -390,7 +391,7 @@ def pl_rho_var(in_pars):
     """
     gs, i, xlab, ylab, gal_name, v_min, v_max, ang_pars = in_pars
     r_min, N_clust, inc_best, inc_std, pa_best, pa_std, d_p =\
-        list(zip(*ang_pars))
+        zip(*ang_pars)
 
     if i in [0, 1]:
         yi, e_yi = pa_best, pa_std
@@ -504,8 +505,9 @@ def make_rho_min_plot(rho_plot_pars):
         pl_rho_var(pl_params)
 
     fig.tight_layout()
-    plt.savefig('figures/MCs_angles_var_w_rho.png', dpi=300,
-                bbox_inches='tight')
+    # plt.savefig('figures/MCs_angles_var_w_rho.png', dpi=300,
+    #             bbox_inches='tight')
+    plt.savefig('MCs_angles_var_w_rho.png', dpi=300, bbox_inches='tight')
 
 
 if __name__ == "__main__":

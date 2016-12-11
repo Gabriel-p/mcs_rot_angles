@@ -63,3 +63,4 @@ target/
 
 figures/*.png
 modules/*.png
+.python-version

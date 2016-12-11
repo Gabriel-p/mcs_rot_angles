@@ -2,7 +2,7 @@
 
 from astropy.coordinates import Angle
 from astropy import units as u
-from . import deproj_dist as dd
+import deproj_dist as dd
 
 
 def get_deproj_dist(gal_dist, inc, pa, rho, phi):

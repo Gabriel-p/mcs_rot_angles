@@ -2,7 +2,7 @@
 
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
-from . import deproj_dist as dd
+import deproj_dist as dd
 
 
 def get_rho_phi(ra, dec, gal_cent):
@@ -10,7 +10,7 @@ def get_rho_phi(ra, dec, gal_cent):
     Obtain projected angular distance from center of galaxy to cluster, and
     position angle of cluster.
     '''
-    coords = SkyCoord(list(zip(*[ra, dec])), unit=(u.deg, u.deg))
+    coords = SkyCoord(zip(*[ra, dec]), unit=(u.deg, u.deg))
     # Obtain angular projected distance and position angle for the cluster.
     rho, Phi, phi = dd.rho_phi(coords, gal_cent)
 
