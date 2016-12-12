@@ -16,8 +16,8 @@ def make_plots(in_params, gal_str_pars, rho_plot_pars):
     print('Inclination vs position angles plot done.')
     make_rho_min_plot(rho_plot_pars)
     print('Rho min plot done.')
-    make_dist_2_cents(in_params)
-    print('Distances to center of MC done.')
+    # make_dist_2_cents(in_params)
+    # print('Distances to center of MC done.')
 
 
 def main():

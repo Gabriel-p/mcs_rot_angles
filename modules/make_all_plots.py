@@ -171,11 +171,11 @@ def pl_angles(in_pars):
         gal_name = gal_id[0]
     elif i in [3, 4, 5]:
         y1, y2 = 1, 2
-        x1, x2 = x_gdsp[i-3]
+        x1, x2 = x_gdsp[i - 3]
         gal_name = gal_id[1]
 
     ax = plt.subplot(gs[y1:y2, x1:x2])
-    xy_font_s = 12
+    xy_font_s = 13
     plt.xlim(xmin, xmax)
     plt.ylim(ymin, ymax)
     plt.tick_params(axis='both', which='major', labelsize=xy_font_s - 3)
@@ -188,7 +188,7 @@ def pl_angles(in_pars):
          'M3: Minimize distance to plane (free)']
     if i in [0, 1, 2]:
         ax.set_xticklabels([])
-        plt.title(t[i], fontsize=11)
+        plt.title(t[i], fontsize=xy_font_s)
     if i in [1, 2, 4, 5]:
         ax.set_yticklabels([])
 
@@ -237,8 +237,13 @@ def pl_angles(in_pars):
     the_divider = make_axes_locatable(ax)
     color_axis = the_divider.append_axes("right", size="2%", pad=0.1)
     # Colorbar.
-    cbar = plt.colorbar(SC, cax=color_axis)
-    cbar.set_label(cb_lab[i], fontsize=xy_font_s, labelpad=4, y=0.5)
+    if i in [0, 3]:
+        cbar = plt.colorbar(SC, cax=color_axis, ticks=np.linspace(0.1, 0.9, 9))
+    else:
+        cbar = plt.colorbar(SC, cax=color_axis)
+    if i in [0, 1, 2]:
+        cbar.set_label(cb_lab[i], fontsize=xy_font_s + 3, labelpad=-10,
+                       y=-0.03, rotation=0)
     cbar.ax.tick_params(labelsize=xy_font_s - 3)
     if i not in [0, 3]:
         cbar.ax.invert_yaxis()
@@ -251,12 +256,12 @@ def diag_plots(in_pars):
     """
     gs, i, xlab, ylab, ang_pars = in_pars
 
-    x_gdsp = [[[0, 1], [2, 3], [4, 5]], [[1, 2], [3, 4],  [5, 6]]]
+    x_gdsp = [[[0, 1], [2, 3], [4, 5]], [[1, 2], [3, 4], [5, 6]]]
     y1, y2 = 2, 3
     x11, x12 = x_gdsp[0][i]
     x21, x22 = x_gdsp[1][i]
 
-    xy_font_s = 12
+    xy_font_s = 13
     cm = plt.cm.get_cmap('RdYlBu_r')
 
     # Unpack
@@ -269,12 +274,13 @@ def diag_plots(in_pars):
     axl = plt.subplot(right_gs[1])
     plt.xlim(xmin, xmax)
     plt.ylim(ymin, ymax)
-    plt.xlabel(xlab, fontsize=xy_font_s)
+    plt.xlabel(xlab, fontsize=xy_font_s + 3)
+    axl.xaxis.set_label_coords(1.05, -0.065)
     plt.tick_params(axis='both', which='major', labelsize=xy_font_s - 3)
     axl.grid(b=True, which='major', color='gray', linestyle='--', lw=0.3,
              zorder=1)
     if i == 0:
-        axl.set_ylabel(ylab, fontsize=xy_font_s)
+        axl.set_ylabel(ylab, fontsize=xy_font_s + 3)
     else:
         axl.set_yticklabels([])
     axl.tick_params(axis='both', which='major', labelsize=9)
@@ -282,7 +288,7 @@ def diag_plots(in_pars):
     plt.scatter(xi, yi, marker='o', c=zi, edgecolor='k', s=25,
                 cmap=cm, lw=0.25, zorder=4)
     # Gal name.
-    text1 = r'$[\Theta_{{{}}},i_{{{}}}]$'.format(i*2+1, i*2+1)
+    text1 = r'$[\Theta_{{{}}},i_{{{}}}]$'.format(i * 2 + 1, i * 2 + 1)
     text = 'SMC\n' + text1
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=xy_font_s))
     ob.patch.set(alpha=0.85)
@@ -297,15 +303,15 @@ def diag_plots(in_pars):
 
     # Unpack
     xmin, xmax, ymin, ymax, xi, yi, zi, mean_pos, i_pa_std, e_w, e_h, theta = \
-        ang_pars[i+3]
-    # Right pot.
+        ang_pars[i + 3]
+    # Right plot.
     right_gs = gridspec.GridSpecFromSubplotSpec(
         1, 2, width_ratios=[6, 1], subplot_spec=gs[y1:y2, x21:x22],
         wspace=0.)
     axr = plt.subplot(right_gs[0])
     plt.xlim(xmin, xmax)
     plt.ylim(ymin, ymax)
-    plt.xlabel(xlab, fontsize=xy_font_s)
+    # plt.xlabel(xlab, fontsize=xy_font_s + 1)
     plt.tick_params(axis='both', which='major', labelsize=xy_font_s - 3)
     axr.grid(b=True, which='major', color='gray', linestyle='--', lw=0.3,
              zorder=1)
@@ -314,7 +320,7 @@ def diag_plots(in_pars):
     SC = plt.scatter(xi, yi, marker='o', c=zi, edgecolor='k', s=25,
                      cmap=cm, lw=0.25, zorder=4)
     # Gal name.
-    text1 = r'$[\Theta_{{{}}},i_{{{}}}]$'.format(i*2+2, i*2+2)
+    text1 = r'$[\Theta_{{{}}},i_{{{}}}]$'.format(i * 2 + 2, i * 2 + 2)
     text = 'LMC\n' + text1
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=xy_font_s))
     ob.patch.set(alpha=0.85)
@@ -331,8 +337,9 @@ def diag_plots(in_pars):
     color_axis = the_divider.append_axes("right", size="5%", pad=0.1)
     # Colorbar.
     cbar = plt.colorbar(SC, cax=color_axis)
-    cbar.set_label(r'$log(aye/yr)_{ASteCA}$', fontsize=xy_font_s, labelpad=4,
-                   y=0.5)
+    if i == 2:
+        cbar.set_label(r'$log(aye/yr)_{ASteCA}$', fontsize=xy_font_s + 1,
+                       labelpad=4, y=0.5)
     cbar.ax.tick_params(labelsize=xy_font_s - 3)
 
 
@@ -347,15 +354,15 @@ def make_angles_plot(gal_str_pars):
     # New gridspecs for bottom rectangular plots.
     # ***Values selected by hand***
     gs2 = gridspec.GridSpec(3, 6)
-    gs2.update(wspace=0.0, bottom=0.029, left=0.031, right=0.95)
+    gs2.update(wspace=0.0, bottom=0.029, left=0.035, right=0.98)
     gs3 = gridspec.GridSpec(3, 6)
-    gs3.update(wspace=0.0, bottom=0.029, left=0.043, right=0.965)
+    gs3.update(wspace=0.0, bottom=0.029, left=0.038, right=0.98)
     gs4 = gridspec.GridSpec(3, 6)
-    gs4.update(wspace=0.0, bottom=0.029, left=0.05, right=0.976)
+    gs4.update(wspace=0.0, bottom=0.029, left=0.04, right=0.98)
 
     xlab = ['', r'Inclination ($i^{\circ}$)', r'$d_{GC}\,(Kpc)$']
     ylab = ['', r'Position angle ($\Theta^{\circ}$)',
-            r'$d_{[\Theta_m,i_m]}\,(Kpc)$']
+            r'$d_{[\Theta,i]}\,(Kpc)$']
 
     str_lst = [
         # SMC dens map
@@ -406,13 +413,13 @@ def pl_rho_var(in_pars):
 
     ax2 = ax.twiny()
     xy_font_s = 12
-    ax.set_xlim(-0.2, max(r_min)+0.2)
+    ax.set_xlim(-0.2, max(r_min) + 0.2)
     if i in [0, 1]:
         plt.ylim(0., 230.)
     else:
         plt.ylim(-94., 94.)
     # Increase font since it's LaTeX and it looks small.
-    ax.set_xlabel(xlab, fontsize=xy_font_s+3)
+    ax.set_xlabel(xlab, fontsize=xy_font_s + 6)
     ax.set_ylabel(ylab, fontsize=xy_font_s)
     # Set minor ticks
     ax.minorticks_on()
@@ -430,34 +437,35 @@ def pl_rho_var(in_pars):
     for j, y in enumerate(yi):
         # One loop for each method.
         for k, y_method in enumerate(y):
-            sx = np.array(r_min[j]) + k*0.05 - 0.05
+            sx = np.array(r_min[j]) + k * 0.05 - 0.05
             plt.errorbar(sx, y_method, yerr=e_yi[j][k], ls='none', color='k',
                          elinewidth=0.35, zorder=3)
-            l = leg[k] if [i, j] == [0, 0] else None
+            label = leg[k] if [i, j] == [0, 0] else None
             SC = plt.scatter(sx, y_method, marker=m[k], c=d_p[j][k],
                              edgecolor='grey', s=80, cmap=cm, lw=0.75,
-                             vmin=v_min, vmax=v_max, zorder=4, label=l)
+                             vmin=v_min, vmax=v_max, zorder=4, label=label)
 
     if i == 0:
         # Legend.
         leg = plt.legend(loc='upper right', markerscale=0.85, scatterpoints=1,
-                         fontsize=xy_font_s-1)
+                         fontsize=xy_font_s - 1)
         # Set the alpha value of the legend.
         leg.get_frame().set_alpha(0.5)
         leg.legendHandles[0].set_color('#ca7c70')
         leg.legendHandles[1].set_color('#ca7c70')
         leg.legendHandles[2].set_color('#ca7c70')
     # Set font size for the three axes.
-    ax.set_xticklabels(ax.get_xticks(), fontsize=xy_font_s-3)
-    ax.set_yticklabels(ax.get_yticks(), fontsize=xy_font_s-3)
+    ax.set_xticklabels(ax.get_xticks(), fontsize=xy_font_s - 3)
+    ax.set_yticklabels(ax.get_yticks(), fontsize=xy_font_s - 3)
     # Set range, ticks, and label for the second x axis.
     # Second x axis.
     ax2.set_xlim(ax.get_xlim())
     ax2.set_xticks(r_min)
     if i in [0, 1]:
         ax.set_xticklabels([])
-        ax2.set_xticklabels(N_clust, fontsize=xy_font_s-3)
-        ax2.set_xlabel(r"$N_{clusters}$", fontsize=xy_font_s+3, labelpad=10.5)
+        ax2.set_xticklabels(N_clust, fontsize=xy_font_s - 3)
+        ax2.set_xlabel(r"$N_{clusters}$",
+                       fontsize=xy_font_s + 3, labelpad=10.5)
     else:
         ax2.set_xticklabels([])
     if i in [1, 3]:
@@ -470,7 +478,7 @@ def pl_rho_var(in_pars):
     if i in [1, 3]:
         cbar = plt.colorbar(SC, cax=color_axis)
         cb_lab = r'$\overline{{|d_{{p}}}|}$'
-        cbar.set_label(cb_lab, fontsize=xy_font_s, labelpad=6, y=0.5)
+        cbar.set_label(cb_lab, fontsize=xy_font_s + 3, labelpad=6, y=0.5)
         cbar.ax.tick_params(labelsize=xy_font_s - 3)
         cbar.ax.invert_yaxis()
 
@@ -488,7 +496,9 @@ def make_rho_min_plot(rho_plot_pars):
               r'Position angle ($\Theta^{\circ}$)', r'$\rho_{min}$']
 
     # Extract min and max d_p values.
-    d_p_vals = zip(*rho_plot_pars[0])[-1] + zip(*rho_plot_pars[1])[-1]
+    perp_sum_smc = list(zip(*rho_plot_pars[0]))[-1]
+    perp_sum_lmc = list(zip(*rho_plot_pars[1]))[-1]
+    d_p_vals = perp_sum_smc + perp_sum_lmc
     d_p_vals_flat = [item for sublist in d_p_vals for item in sublist]
     d_p_mean, d_p_std = np.mean(d_p_vals_flat), np.std(d_p_vals_flat)
     v_min, v_max = d_p_mean - d_p_std, d_p_mean + d_p_std
@@ -506,8 +516,3 @@ def make_rho_min_plot(rho_plot_pars):
     fig.tight_layout()
     plt.savefig('figures/MCs_angles_var_w_rho.png', dpi=300,
                 bbox_inches='tight')
-
-
-if __name__ == "__main__":
-    rho_plot_pars = [[[0.0, 89, [-42.48743718592965, -78.266331658291463, -89.96980287829855], [48.499149298515853, 85.04248606134496, 84.682955366575058], [1.0, 71.663316582914575, 78.13250408144967], [65.784541928392002, 15.909331950780436, 0.93851098280535983], (1.331176272427864, 0.96084606342114731, 0.81772065826666152)], [0.5, 87, [42.48743718592965, -77.371859296482413, 89.88148752371315], [47.527598510191481, 82.081674810357271, 70.149180014506825], [179.0, 71.663316582914575, 78.2432888902662], [69.744882007993468, 15.500202103386496, 0.52234516087405891], (1.3309353588145467, 0.96994067734571277, 0.82813901038918125)], [1.0, 49, [38.015075376884425, 45.170854271356774, 46.77735112943847], [38.539408531388275, 67.344668487697191, 51.913593513382018], [106.54773869346734, 109.23115577889448, 83.06748372179425], [62.599480012181488, 10.943586964709064, 8.9111155544734633], (1.150624702977586, 1.1410177723672563, 1.0889555842244862)], [1.5, 31, [35.331658291457288, 20.125628140703512, 26.320112478397128], [35.516850687675522, 46.460089612590387, 64.317038413199867], [111.91457286432161, 96.708542713567837, 84.25182745583575], [64.04430293220679, 20.354747966845924, 16.957643687314878], (1.3026374367223099, 1.2301995726263533, 1.2173628826055167)], [2.0, 24, [37.120603015075375, 29.964824120603012, -43.69406519994854], [37.526469432831412, 50.587987376514533, 70.407852084960084], [106.54773869346734, 87.763819095477388, 73.95712782091309], [53.730181951338359, 12.802680748090093, 8.4873555922918769], (1.3994799194383702, 1.360976618488986, 1.2407278660903298)], [2.5, 18, [38.015075376884425, 41.5929648241206, -66.83172994815324], [37.356698785058249, 52.617279472127819, 51.944164365867607], [109.23115577889448, 102.07537688442211, 90.54039015082444], [53.614654713336563, 11.968063598988627, 8.3721674358790263], (1.4003046890498516, 1.3728351662150913, 1.0872065157338768)], [3.0, 15, [38.015075376884425, -44.276381909547737, -69.88438238610051], [35.970909928886883, 60.215929222742041, 55.776349982098658], [112.80904522613065, 112.80904522613065, 91.62330191914594], [47.307438225204386, 13.780170488768555, 14.788974421839727], (1.3454602324095575, 1.3083670601268151, 1.0290566350176724)], [3.5, 10, [-25.492462311557787, -46.959798994974875, -59.245880000427306], [32.196396920419609, 54.023512332972103, 45.547400626001888], [15.311557788944723, 113.7035175879397, 87.59243958138254], [49.426503157960482, 17.077864510115216, 27.152750286205357], (1.8192161297697731, 1.2596330333667318, 0.84580181662897114)], [4.0, 7, [-24.597989949748751, -20.125628140703512, -23.769321303949084], [29.8784551569115, 50.163243762561869, 43.604742619226066], [3.6834170854271355, 108.33668341708542, 54.34303829133904], [46.880422026088972, 25.769019122126128, 26.001074461577748], (1.6896290975513704, 1.1335858227654494, 0.73527204230745513)]], [[0.0, 150, [32.64824120603015, 20.125628140703512, 20.512091420517066], [41.01506334650287, 38.192921395939926, 34.951030061102166], [170.9497487437186, 155.74371859296483, 155.33079998268624], [35.138622393709227, 0.61158627913305985, 1.3298455501639175], (1.0830412128389606, 1.0375008301254238, 1.0369818679902618)], [0.5, 146, [32.64824120603015, 20.125628140703512, 20.283547784155367], [39.945308036874032, 44.436018558139985, 24.916112812656248], [170.05527638190955, 154.84924623115577, 154.8875290198413], [34.37923925871219, 1.4658434475419631, 2.7491575284300955], (1.081090796084069, 1.0334840668499952, 1.0330386888029481)], [1.0, 137, [31.753768844221099, 19.231155778894475, 20.064078236311488], [39.551051423512568, 35.084954084205826, 25.005798365317002], [170.05527638190955, 154.84924623115577, 154.45051989734972], [34.641375251732285, 4.1014849744305923, 13.711384295904786], (1.0719411819505522, 1.0149754095770596, 1.0143682551835902)], [1.5, 127, [30.859296482412063, 18.336683417085425, 17.981646246886157], [37.825216214213206, 40.373054182369273, 41.481093518520211], [168.26633165829145, 155.74371859296483, 155.5776291882587], [32.122955928406469, 17.44961984128128, 12.225834690502673], (1.0375534986915822, 0.98305939646022855, 0.98282826258986078)], [2.0, 87, [27.281407035175874, 8.4974874371859244, 9.85508015212824], [32.457900151587879, 20.362985013688697, 19.303772421216312], [166.47738693467338, 170.05527638190955, 171.74680636038977], [34.361479140250069, 42.222123688349981, 42.003144780545107], (0.99053958811274867, 0.91329748148462198, 0.90747547529013883)], [2.5, 62, [22.80904522613065, 12.075376884422113, 11.373389113539856], [27.300813116060493, 16.788393196417644, 18.254728346455238], [163.79396984924622, 167.3718592964824, 171.5319653533977], [33.572330187948381, 57.471082003867686, 62.74064063419727], (0.9373299752309705, 0.90145941297017085, 0.90051915449089492)], [3.0, 42, [18.336683417085425, 2.2361809045226124, 8.765598682141892], [23.365330264242196, 12.821564772250301, 11.016185812508557], [140.53768844221105, 160.21608040201005, 134.65859543616438], [36.338619766345936, 53.172815184828536, 49.380339528750156], (0.99367488257464687, 0.93200902780347561, 0.88347140055942863)], [3.5, 39, [19.231155778894475, 3.1306532663316631, 8.765677417446565], [23.322122858368679, 13.470100419933697, 11.444783077807179], [145.90452261306532, 164.68844221105527, 134.6585512743539], [34.228000292894748, 61.194003998682518, 46.993846377077013], (1.0048319039080325, 0.95229641627698747, 0.8881924273266838)], [4.0, 28, [15.653266331658287, 11.180904522613062, 9.958148276837438], [19.542868092490227, 15.119840242554806, 11.67363163758548], [142.32663316582915, 164.68844221105527, 146.93330037949346], [40.317443505409031, 61.636850821300023, 52.052502419321215], (0.97488072676160531, 0.91779752704282047, 0.77373295378843943)]]]
-    make_rho_min_plot(rho_plot_pars)

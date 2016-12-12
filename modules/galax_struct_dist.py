@@ -66,7 +66,7 @@ def gsd(in_params):
 
     # Obtain grid of inclination and position angles of size: N x N
     # Default is 40
-    N_grid = 20  # FIXME
+    N_grid = 40  # FIXME
     inc_lst, pa_lst = inc_PA_grid(N_grid, inc_rang, pa_rang)
 
     # Obtain coefficients for the plane equation defined by each combination
@@ -74,19 +74,20 @@ def gsd(in_params):
     plane_abc = plane_equation(inc_lst, pa_lst)
 
     # Obtain *denser/finer* grid of inclination and position angles.
-    N_f = 200
+    # Default is 200
+    N_f = 200  # FIXME
     xi, yi = inc_PA_grid(N_f, inc_rang, pa_rang)
 
     # Number of iterations for the minimization algorithm that searches for the
     # best plane fit to the clusters, with no constrains imposed.
     # Default is 100
-    N_min = 10  # FIXME
+    N_min = 100  # FIXME
 
     # Number of Monte Carlo runs, where the distance to each
     # cluster is randomly drawn from a normal probability distribution.
     # This is used to assign errors to the best fit angle values.
     # Default is 100
-    N_maps = 10  # FIXME
+    N_maps = 100  # FIXME
 
     # Store parameters needed for plotting the density maps and 1:1 diagonal
     # plots of deprojected distance in Kpc, as well as the r_min plots.
