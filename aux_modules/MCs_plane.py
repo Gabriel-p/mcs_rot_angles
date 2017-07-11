@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import sys
 r_path = os.path.realpath(__file__)[:-24]
-print r_path
+# print r_path
 sys.path.insert(0, r_path + '/modules/')
 from MCs_data import MCs_data
 
@@ -36,7 +36,7 @@ def dist_filter(r_min, r_max, ra_g, dec_g, dm_g, e_dm_g, gal_cent):
 
     # Obtain angular projected distance and position angle for the
     # clusters in the galaxy.
-    coords = SkyCoord(zip(*[ra_g, dec_g]), unit=(u.deg, u.deg))
+    coords = SkyCoord(list(zip(*[ra_g, dec_g])), unit=(u.deg, u.deg))
     rho_g, phi_g = rho_phi(coords, gal_cent)
 
     # age_f, d_d_f, e_dd_f
@@ -119,12 +119,12 @@ def get_ellipse(N_ran, rho, phi, D_0, dm_g, e_dm_g):
     """
     ellip_matrix, centers = [], []
     for _ in range(N_ran):
-        print _
+        print(_)
         # Random draw.
         r_dist = np.random.normal(np.asarray(dm_g), np.asarray(e_dm_g))
         # r_dist = np.asarray(dm_g)  # DEL
         x, y, z = xyz_coords(rho, phi, D_0, r_dist)
-        coords = np.asarray(zip(*[x, y, z]))
+        coords = np.asarray(list(zip(*[x, y, z])))
         # A : (d x d) matrix of the ellipse equation in the 'center form':
         # (x-c)' * A * (x-c) = 1
         # 'centroid' is the center coordinates of the ellipse.
@@ -218,7 +218,7 @@ def make_plot(D_0, inc, theta, cl_xyz, cl_xyz_nf, dm_f, dm_nf, x_e, y_e, z_e):
     a, b, c, d = -1. * np.sin(theta.radian) * np.sin(inc.radian),\
         np.cos(theta.radian) * np.sin(inc.radian),\
         np.cos(inc.radian), 0.
-    print 'a/c,b/c,1,d/c:', a / c, b / c, 1., d / c
+    print('a/c,b/c,1,d/c:', a / c, b / c, 1., d / c)
     # Rotated plane.
     X2_t, Y2_t = np.meshgrid([min_X, max_X], [0, max_Y])
     Z2_t = (-a * X2_t - b * Y2_t) / c
