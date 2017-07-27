@@ -61,6 +61,6 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 
-figures/*.png
+output/*
 modules/*.png
 .python-version

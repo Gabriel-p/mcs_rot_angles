@@ -2,10 +2,7 @@
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Distance
 import numpy as np
-try:
-    from functions.MCs_data import MCs_data
-except:
-    from .MCs_data import MCs_data
+from .MCs_data import MCs_data
 
 
 def dist_err_mag_2_pc(d_pc, e_dm, e_E):
@@ -90,14 +87,15 @@ def dist_2_cloud_center(gal, ra_deg, dec_deg, dist_mod, e_dm):
     # *Individual* distance (ASteCA) for each cluster (in parsecs).
     # ASteCA gives the distance modulus as dm = -5 + 5*log(d), so to transform
     # that into the distance in parsecs 'd', we apply:
-    d_clust = Distance(10 ** (0.2 * (float(dist_mod) + 5)), unit=u.pc)
+    d_clust = Distance(10 ** (0.2 * (dist_mod + 5.)), unit=u.pc)
     # Obtain error in distance in parsecs.
     e_cl_dist_pc = dist_err_mag_2_pc(d_clust, e_dm, 0.)
 
     # Galaxy center coordinate.
     c1 = SkyCoord(ra=gal_center.ra, dec=gal_center.dec, distance=gal_dist)
     # Cluster coordinate.
-    c2 = SkyCoord(ra=ra_deg*u.degree, dec=dec_deg*u.degree, distance=d_clust)
+    c2 = SkyCoord(ra=ra_deg * u.degree, dec=dec_deg * u.degree,
+                  distance=d_clust)
 
     # 3D distance between cluster and center of galaxy, in parsecs.
     dist_pc = c1.separation_3d(c2)
@@ -110,7 +108,7 @@ def dist_2_cloud_center(gal, ra_deg, dec_deg, dist_mod, e_dm):
     # Error for the 3D distance.
     e_d_pc = dist_err_2_pts(dist_pc, c1, e_gal_dist_pc, c2, e_cl_dist_pc)
 
-    return dist_pc, e_d_pc
+    return dist_pc.kpc, e_d_pc.kpc
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 
 import numpy as np
-from tabulate import tabulate
 #
 from .MCs_data import MCs_data
+from .dist_2_cent import dist_2_cloud_center
 from .dist_filter import dist_filter
 from .i_PA_grid_dep_dist import i_PA_dist_vals
 from .xyz_coords import xyz_coords
@@ -27,36 +27,11 @@ def inc_PA_grid(N, inc_rang, pa_rang):
     return inc_lst, pa_lst
 
 
-def gal_data(ra, dec, dist_cent, e_d_cent, aarr, darr, dsigma, j):
-    """
-    Return data for the selected galaxy: j=0 --> SMC ; j=1 --> LMC.
-    """
-    # Equatorial coordinates for clusters in this galaxy.
-    ra_g, dec_g = ra[j], dec[j]
-    # 3D distances from clusters to center of galaxies obtained by ASteCA
-    # + astropy, in Kpc.
-    d_d_g, e_dd_g = np.asarray(dist_cent[j]) / 1000.,\
-        np.asarray(e_d_cent[j]) / 1000.
-    # ASteCA ages for clusters that belong to this galaxy.
-    age_g = aarr[j][0]
-    # ASteCA distance moduli and their errors.
-    dm_g, e_dm_g = darr[j][0], dsigma[j][0]
-
-    # Retrieve center coordinates and distance (in parsecs) to galaxy.
-    gal_cent, gal_dist, e_dm_dist = MCs_data(j)
-
-    return ra_g, dec_g, d_d_g, e_dd_g, age_g, dm_g, e_dm_g, gal_cent, gal_dist
-
-
-def gsd(in_params):
+def gsd(smc_data, lmc_data):
     '''
     Calculate the best match for the inclination and position angles of the
     MCs, based on the distance assigned to each cluster by ASteCA.
     '''
-    ra, dec, aarr, dist_cent, e_d_cent, darr, dsigma = [
-        in_params[_] for _ in ['ra', 'dec', 'aarr', 'dist_cent',
-                               'e_d_cent', 'darr', 'dsigma']]
-
     # Define ranges for the grid of inclination and position angles.
     inc_rang, pa_rang = [-89., 89.], [1., 179.]
 
@@ -66,7 +41,7 @@ def gsd(in_params):
 
     # Obtain grid of inclination and position angles of size: N x N
     # Default is 40
-    N_grid = 40  # FIXME
+    N_grid = 4  # FIXME
     inc_lst, pa_lst = inc_PA_grid(N_grid, inc_rang, pa_rang)
 
     # Obtain coefficients for the plane equation defined by each combination
@@ -75,29 +50,40 @@ def gsd(in_params):
 
     # Obtain *denser/finer* grid of inclination and position angles.
     # Default is 200
-    N_f = 200  # FIXME
+    N_f = 20  # FIXME
     xi, yi = inc_PA_grid(N_f, inc_rang, pa_rang)
 
     # Number of iterations for the minimization algorithm that searches for the
     # best plane fit to the clusters, with no constrains imposed.
     # Default is 100
-    N_min = 100  # FIXME
+    N_min = 10  # FIXME
 
     # Number of Monte Carlo runs, where the distance to each
     # cluster is randomly drawn from a normal probability distribution.
     # This is used to assign errors to the best fit angle values.
     # Default is 100
-    N_maps = 100  # FIXME
+    N_maps = 10  # FIXME
 
     # Store parameters needed for plotting the density maps and 1:1 diagonal
     # plots of deprojected distance in Kpc, as well as the r_min plots.
     gal_str_pars, rho_plot_pars, table = [[], []], [[], []], []
-    for j in [0, 1]:  # SMC, LMC = 0, 1
+    for j, gal in enumerate([smc_data, lmc_data]):
+        # SMC, LMC = 0, 1
         print('\nGalaxy:', j)
 
-        # Retrieve data for this galaxy.
-        ra_g, dec_g, d_d_g, e_dd_g, age_g, dm_g, e_dm_g, gal_cent, gal_dist =\
-            gal_data(ra, dec, dist_cent, e_d_cent, aarr, darr, dsigma, j)
+        # Equatorial coordinates for clusters in this galaxy.
+        ra_g, dec_g = gal['ra'], gal['dec']
+        # ASteCA distance moduli and their errors.
+        dm_g, e_dm_g = gal['dist_mod'], gal['e_dm']
+        # ASteCA ages for clusters that belong to this galaxy.
+        age_g = gal['log(age)']
+
+        # Center coordinates and distance (in parsecs) to this galaxy.
+        gal_cent, gal_dist, e_dm_dist = MCs_data(j)
+
+        # 3D distance from clusters to galaxy center, and its error. Both
+        # values are expressed in kilo-parsecs.
+        d_d_g, e_dd_g = dist_2_cloud_center(j, ra_g, dec_g, dm_g, e_dm_g)
 
         # Input minimum projected angular distance values to use in filter.
         # The value is used as: (r_min...]
@@ -227,14 +213,14 @@ def gsd(in_params):
                 # Store parameters for density maps and 1:1 diagonal plots.
                 if r_idx == r_idx_save:
                     # Density maps.
-                    gal_str_pars[0].append([xmin, xmax, ymin, ymax, xi, yi,
-                                           dens_vals_interp, [inc_b, pa_b],
-                                           i_pa_std, width, height, theta])
+                    gal_str_pars[0].append(
+                        [xmin, xmax, ymin, ymax, xi, yi, dens_vals_interp,
+                         [inc_b, pa_b], i_pa_std, width, height, theta])
                     # Identity 1:1 plots.
                     # Append dummy values at the end.
-                    gal_str_pars[1].append([0.1, 7.95, 0.01, 7.95, d_d_f,
-                                           dep_dist_kpc, age_f, ccc_sum_d_best,
-                                           '', '', '', ''])
+                    gal_str_pars[1].append(
+                        [0.1, 7.95, 0.01, 7.95, d_d_f, dep_dist_kpc, age_f,
+                         ccc_sum_d_best, '', '', '', ''])
 
                 print(('{} method processed.'.format(method)))
 
@@ -269,6 +255,6 @@ def gsd(in_params):
                 r"${:.1f}pm{:.1f}$".format(pa_mean, pa_std),
                 r"${:.1f}pm{:.1f}$".format(inc_mean, inc_std)])
 
-        print(tabulate(table, tablefmt="latex"))
+        print(table)
 
     return gal_str_pars, rho_plot_pars

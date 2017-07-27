@@ -152,7 +152,7 @@ def make_dist_2_cents(in_params):
 
     # Output png file.
     fig.tight_layout()
-    plt.savefig('figures/as_dist_2_cent.png', dpi=300, bbox_inches='tight')
+    plt.savefig('output/as_dist_2_cent.png', dpi=300, bbox_inches='tight')
 
 
 def pl_angles(in_pars):
@@ -388,7 +388,7 @@ def make_angles_plot(gal_str_pars):
         diag_plots(pl_params)
 
     fig.tight_layout()
-    plt.savefig('figures/MCs_deproj_dist_angles.png', dpi=300,
+    plt.savefig('output/MCs_deproj_dist_angles.png', dpi=300,
                 bbox_inches='tight')
 
 
@@ -514,5 +514,5 @@ def make_rho_min_plot(rho_plot_pars):
         pl_rho_var(pl_params)
 
     fig.tight_layout()
-    plt.savefig('figures/MCs_angles_var_w_rho.png', dpi=300,
+    plt.savefig('output/MCs_angles_var_w_rho.png', dpi=300,
                 bbox_inches='tight')
