@@ -72,7 +72,7 @@ def dist_err_2_pts(d_pc, c1, e_r_0, c2, e_r):
     return e_d_pc
 
 
-def dist_2_cloud_center(gal, ra_deg, dec_deg, dist_mod, e_dm):
+def main(gal, ra_deg, dec_deg, dist_mod, e_dm):
     '''
     Obtain the 3D distance in parsecs between the center of a cluster and
     the center of the Magellanic cloud it belongs to.
@@ -108,11 +108,11 @@ def dist_2_cloud_center(gal, ra_deg, dec_deg, dist_mod, e_dm):
     # Error for the 3D distance.
     e_d_pc = dist_err_2_pts(dist_pc, c1, e_gal_dist_pc, c2, e_cl_dist_pc)
 
-    return dist_pc.kpc, e_d_pc.kpc
+    return dist_pc.kpc, e_d_pc.kpc, gal_center, gal_dist
 
 
 if __name__ == "__main__":
     # L115
-    dist_2_cloud_center(0, 29.1833333333, -74.2194444444, 18.96, 0.06)
+    main(0, 29.1833333333, -74.2194444444, 18.96, 0.06)
     # L114
-    dist_2_cloud_center(0, 27.5791666667, -74.3561111111, 18.96, 0.06)
+    main(0, 27.5791666667, -74.3561111111, 18.96, 0.06)

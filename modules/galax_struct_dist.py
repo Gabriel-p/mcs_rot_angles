@@ -1,10 +1,9 @@
 
 import numpy as np
 #
-from .MCs_data import MCs_data
-from .dist_2_cent import dist_2_cloud_center
-from .dist_filter import dist_filter
-from .i_PA_grid_dep_dist import i_PA_dist_vals
+from modules import dist2CloudCenter
+from modules import dist_filter
+from modules import i_PA_DeprjDist
 from .xyz_coords import xyz_coords
 from .interp_dens_map import interp_dens_map
 from .best_fit_angles import get_angles
@@ -78,12 +77,11 @@ def gsd(smc_data, lmc_data):
         # ASteCA ages for clusters that belong to this galaxy.
         age_g = gal['log(age)']
 
-        # Center coordinates and distance (in parsecs) to this galaxy.
-        gal_cent, gal_dist, e_dm_dist = MCs_data(j)
-
         # 3D distance from clusters to galaxy center, and its error. Both
         # values are expressed in kilo-parsecs.
-        d_d_g, e_dd_g = dist_2_cloud_center(j, ra_g, dec_g, dm_g, e_dm_g)
+        # Center coordinates and distance (in parsecs) to this galaxy.
+        d_d_g, e_dd_g, gal_cent, gal_dist = dist2CloudCenter.main(
+            j, ra_g, dec_g, dm_g, e_dm_g)
 
         # Input minimum projected angular distance values to use in filter.
         # The value is used as: (r_min...]
@@ -96,16 +94,16 @@ def gsd(smc_data, lmc_data):
             # The rho and phi angles for each cluster depend on the assumed
             # coordinates for the center of the galaxy.
             ra_f, dec_f, age_f, d_d_f, e_dd_f, dm_f, e_dm_f, rho_f, phi_f =\
-                dist_filter(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g,
-                            dm_g, e_dm_g, gal_cent)
+                dist_filter.main(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g,
+                                 dm_g, e_dm_g, gal_cent)
 
             # Calculate deprojected distances for all clusters in this galaxy,
             # for all inclination and position angles defined in the grid.
             # These values depend on the coordinates of the clusters, the
             # rotation angles that define each inclined plane, and the distance
             # and center coordinates of the galaxy.
-            dep_dist_i_PA_vals = i_PA_dist_vals(rho_f, phi_f, inc_lst, pa_lst,
-                                                gal_dist)
+            dep_dist_i_PA_vals = i_PA_DeprjDist.main(
+                rho_f, phi_f, inc_lst, pa_lst, gal_dist)
             print(('  vdm&C01 deprojected distances obtained for the defined\n'
                    '  grid of rotation angles. Minimum angular distance\n'
                    '  allowed: {}'.format(r_min)))

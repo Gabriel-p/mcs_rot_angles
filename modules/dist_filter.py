@@ -17,8 +17,8 @@ def get_rho_phi(ra, dec, gal_cent):
     return rho, phi
 
 
-def dist_filter(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g, dm_g, e_dm_g,
-                gal_cent):
+def main(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g, dm_g, e_dm_g,
+         gal_cent):
     """
     Filter clusters based on their projected angular distances 'rho'.
 

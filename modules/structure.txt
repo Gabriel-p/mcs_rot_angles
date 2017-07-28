@@ -1,0 +1,57 @@
+
+Structure
+---------
+
+
+1. rot_angles
+   Main function.
+
+2. readData
+   Read input data for both galaxies.
+
+3. galax_struct_dist
+   Process all data.
+
+   1. inc_PA_grid
+
+   2. plane_equation
+
+   3. dist2CloudCenter
+      1. MCs_data
+      2. dist_err_mag_2_pc
+      3. dist_err_2_pts
+
+   4. dist_filter
+      1. get_rho_phi
+
+   5. i_PA_DeprjDist
+      1. get_deproj_dist
+
+   6. xyz_coords
+
+   7. m1_ccc_map
+      1. interp_dens_map
+      2. get_angles
+         1. angle_betw_planes
+      3. ccc_sum_d_for_best_fit
+      4. monte_carlo_errors
+      5. cov_ellipse
+
+   8. m2_fix_plane_perp_dist
+      1. interp_dens_map
+      2. get_angles
+         1. angle_betw_planes
+      3. ccc_sum_d_for_best_fit
+      4. monte_carlo_errors
+      5. cov_ellipse
+
+   9. m3_min_perp_distance
+      1. interp_dens_map
+      2. get_angles
+         1. angle_betw_planes
+      3. ccc_sum_d_for_best_fit
+      4. monte_carlo_errors
+      5. cov_ellipse
+
+4. make_plots
+   Produce final plots.

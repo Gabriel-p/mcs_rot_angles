@@ -15,7 +15,7 @@ def get_deproj_dist(gal_dist, inc, pa, rho, phi):
     return dist_kpc
 
 
-def i_PA_dist_vals(rho, phi, inc_lst, pa_lst, gal_dist):
+def main(rho, phi, inc_lst, pa_lst, gal_dist):
     '''
     Calculate deprojected distance values for each (i, PA) point in the
     defined grid.

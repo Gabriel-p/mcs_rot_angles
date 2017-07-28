@@ -4,7 +4,7 @@ from astropy import units as u
 import numpy as np
 from .method1 import ccc
 from .method3 import perp_error
-from .i_PA_grid_dep_dist import get_deproj_dist
+from .i_PA_DeprjDist import get_deproj_dist
 
 
 def ccc_sum_d_for_best_fit(gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,

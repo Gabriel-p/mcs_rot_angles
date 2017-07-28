@@ -11,11 +11,11 @@ def xyz_coords(rho, phi, D_0, r_dist):
     (see van der Marel & Cioni (2001) and van der Marel et al. (2002)).
     '''
     # Convert distance moduli to Kpc.
-    d_kpc = Distance((10**((r_dist + 5.)*0.2))/1000., unit=u.kpc)
+    d_kpc = Distance((10**((r_dist + 5.) * 0.2)) / 1000., unit=u.kpc)
 
     # Obtain coordinates.
-    x = d_kpc*np.sin(rho.radian)*np.cos(phi.radian)
-    y = d_kpc*np.sin(rho.radian)*np.sin(phi.radian)
-    z = D_0.kpc*u.kpc - d_kpc*np.cos(rho.radian)
+    x = d_kpc * np.sin(rho.radian) * np.cos(phi.radian)
+    y = d_kpc * np.sin(rho.radian) * np.sin(phi.radian)
+    z = D_0.kpc * u.kpc - d_kpc * np.cos(rho.radian)
 
     return x, y, z
