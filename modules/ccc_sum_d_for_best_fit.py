@@ -35,8 +35,8 @@ def ccc_sum_d_for_best_fit(gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
         # Convert best fit PA to theta.
         theta = pa_b + 90.
         # Plane coefficients according to Eq (6) in vdM&C01 for z'=0.
-        a = -1.*np.sin(np.deg2rad(theta))*np.sin(np.deg2rad(inc_b))
-        b = np.cos(np.deg2rad(theta))*np.sin(np.deg2rad(inc_b))
+        a = -1. * np.sin(np.deg2rad(theta)) * np.sin(np.deg2rad(inc_b))
+        b = np.cos(np.deg2rad(theta)) * np.sin(np.deg2rad(inc_b))
         c = np.cos(np.deg2rad(inc_b))
         d = 0.
         abcd = [a, b, c, d]

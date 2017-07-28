@@ -34,6 +34,9 @@ Structure
       2. get_angles
          1. angle_betw_planes
       3. ccc_sum_d_for_best_fit
+         1. method1.ccc
+         2. get_deproj_dist
+         3. method3.perp_error
       4. monte_carlo_errors
       5. cov_ellipse
 
@@ -42,6 +45,9 @@ Structure
       2. get_angles
          1. angle_betw_planes
       3. ccc_sum_d_for_best_fit
+         1. method1.ccc
+         2. get_deproj_dist
+         3. method3.perp_error
       4. monte_carlo_errors
       5. cov_ellipse
 
@@ -50,6 +56,9 @@ Structure
       2. get_angles
          1. angle_betw_planes
       3. ccc_sum_d_for_best_fit
+         1. method1.ccc
+         2. get_deproj_dist
+         3. method3.perp_error
       4. monte_carlo_errors
       5. cov_ellipse
 
