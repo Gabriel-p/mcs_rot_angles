@@ -4,13 +4,17 @@ Structure
 
 
 1. rot_angles
-   Main function.
+   Main function. Reads input data, obtains the angles for each method,
+   and produces the final plots.
 
 2. readData
    Read input data for both galaxies.
 
 3. galax_struct_dist
    Process all data.
+
+   1. procParams
+      Reads all the parameters needed to process the data.
 
    1. inc_PA_grid
 

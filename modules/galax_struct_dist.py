@@ -8,60 +8,21 @@ from .xyz_coords import xyz_coords
 from .interp_dens_map import interp_dens_map
 from .best_fit_angles import get_angles
 from .method1 import m1_ccc_map
-from .method2 import m2_fix_plane_perp_dist, plane_equation
+from .method2 import m2_fix_plane_perp_dist
 from .method3 import m3_min_perp_distance
 from .ccc_sum_d_for_best_fit import ccc_sum_d_for_best_fit
 from .mc_errors import monte_carlo_errors
 from .cov_ellipse import cov_ellipse
 
 
-def inc_PA_grid(N, inc_rang, pa_rang):
-    '''
-    Generate a grid of inclination and position angles for the ranges and
-    size of grid set.
-    '''
-    inc_lst = np.linspace(inc_rang[0], inc_rang[1], N)
-    pa_lst = np.linspace(pa_rang[0], pa_rang[1], N)
-
-    return inc_lst, pa_lst
-
-
-def gsd(smc_data, lmc_data):
-    '''
+def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
+        plane_abc, N_f, xi, yi, N_min, N_maps):
+    """
     Calculate the best match for the inclination and position angles of the
     MCs, based on the distance assigned to each cluster by ASteCA.
-    '''
-    # Define ranges for the grid of inclination and position angles.
-    inc_rang, pa_rang = [-89., 89.], [1., 179.]
 
-    # Grid limits (for plotting).
-    xmin, xmax = inc_rang[0] - 0.1, inc_rang[1] + 0.1
-    ymin, ymax = pa_rang[0] - 0.1, pa_rang[1] + 0.1
-
-    # Obtain grid of inclination and position angles of size: N x N
-    # Default is 40
-    N_grid = 4  # FIXME
-    inc_lst, pa_lst = inc_PA_grid(N_grid, inc_rang, pa_rang)
-
-    # Obtain coefficients for the plane equation defined by each combination
-    # of rotation (inc, PA) angles.
-    plane_abc = plane_equation(inc_lst, pa_lst)
-
-    # Obtain *denser/finer* grid of inclination and position angles.
-    # Default is 200
-    N_f = 20  # FIXME
-    xi, yi = inc_PA_grid(N_f, inc_rang, pa_rang)
-
-    # Number of iterations for the minimization algorithm that searches for the
-    # best plane fit to the clusters, with no constrains imposed.
-    # Default is 100
-    N_min = 10  # FIXME
-
-    # Number of Monte Carlo runs, where the distance to each
-    # cluster is randomly drawn from a normal probability distribution.
-    # This is used to assign errors to the best fit angle values.
-    # Default is 100
-    N_maps = 10  # FIXME
+    Process the three methods defined.
+    """
 
     # Store parameters needed for plotting the density maps and 1:1 diagonal
     # plots of deprojected distance in Kpc, as well as the r_min plots.
@@ -85,7 +46,7 @@ def gsd(smc_data, lmc_data):
 
         # Input minimum projected angular distance values to use in filter.
         # The value is used as: (r_min...]
-        rho_lst = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4.]  # FIXME
+        rho_lst = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4.]
         # Select index of r_min value to plot.
         r_idx_save = 2
         for r_idx, r_min in enumerate(rho_lst):
@@ -141,8 +102,8 @@ def gsd(smc_data, lmc_data):
 
                     # Store density map obtained using the distance values with
                     # no random sampling.
-                    pl_dists_kpc = m2_fix_plane_perp_dist(plane_abc, cl_x,
-                                                          cl_y, cl_z)
+                    pl_dists_kpc = m2_fix_plane_perp_dist(
+                        plane_abc, cl_x, cl_y, cl_z)
                     # Interpolate density map into finer/denser grid.
                     dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
                                                        pl_dists_kpc)
@@ -157,15 +118,15 @@ def gsd(smc_data, lmc_data):
                     # given the set of clusters passed in the (x,y,z) system.
                     # The best fit is obtained minimizing the perpendicular
                     # distance to the plane.
-                    best_angles_pars = m3_min_perp_distance(cl_x, cl_y,
-                                                            cl_z, N_min)
+                    best_angles_pars = m3_min_perp_distance(
+                        cl_x, cl_y, cl_z, N_min)
 
-                    # Obtain density map from Method 2. Used for plotting a
-                    # density map, since Method 3 doesn't generate one.
-                    pl_dists_kpc = m2_fix_plane_perp_dist(plane_abc, cl_x,
-                                                          cl_y, cl_z)
-                    dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
-                                                       pl_dists_kpc)
+                    # Obtain density map from Method 2. Used only for plotting
+                    # a density map, since Method 3 doesn't generate one.
+                    pl_dists_kpc = m2_fix_plane_perp_dist(
+                        plane_abc, cl_x, cl_y, cl_z)
+                    dens_vals_interp = interp_dens_map(
+                        inc_lst, pa_lst, xi, yi, pl_dists_kpc)
 
                 # Best fit angles for the density map with no random sampling.
                 inc_b, pa_b = get_angles(method, best_angles_pars)
