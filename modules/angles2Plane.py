@@ -4,8 +4,16 @@ from astropy.coordinates import Angle
 from astropy import units as u
 
 
+def gal_theta(glx_PA):
+    """
+    Convert position angle of the galaxy 'Theta' (N-->E) to 'theta' (W-->E),
+    as defined in vdM et al. (2002).
+    """
+    return glx_PA + Angle('90d')
+
+
 def main(inc_lst, pa_lst):
-    '''
+    """
     Given fixed values for the two rotation angles i and theta (inclination and
     position angle), obtain the equation of the inclined (x',y') plane; i.e.:
     the flat plane of the galaxy.
@@ -21,7 +29,7 @@ def main(inc_lst, pa_lst):
     where d=0.
 
     See: http://math.stackexchange.com/q/1613472/37846
-    '''
+    """
 
     a_lst, b_lst, c_lst = [], [], []
     for inc in inc_lst:
@@ -31,9 +39,8 @@ def main(inc_lst, pa_lst):
             # Assign 'degrees' units before processing.
             pa = Angle(pa, unit=u.degree)
 
-            # Convert position angle 'Theta' (N-->E) to 'theta' (W-->E),
-            # as that is the parameter used in vdM equations.
-            theta = pa + Angle('90.d')
+            # Per definition, convert to \theta.
+            theta = gal_theta(pa)
 
             # Obtain (a, b, c) coefficients for the inclined x',y' plane.
             a_lst.append(-1. * np.sin(theta.radian) * np.sin(inc.radian))

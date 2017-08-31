@@ -5,11 +5,12 @@ from astropy import units as u
 
 
 def xyz_coords(rho, phi, D_0, r_dist):
-    '''
-    Calculate coordinates in the (x,y,z) system. The x,y plane is parallel
-    the the plane of the sky, and the z axis points towards the observer
-    (see van der Marel & Cioni (2001) and van der Marel et al. (2002)).
-    '''
+    """
+    Calculate coordinates in the (x,y,z) system. The x,y plane is the plane
+    of the sky, and the z axis points towards the observer.
+
+    Eq (5) in see van der Marel & Cioni (2001).
+    """
     # Convert distance moduli to Kpc.
     d_kpc = Distance((10**((r_dist + 5.) * 0.2)) / 1000., unit=u.kpc)
 

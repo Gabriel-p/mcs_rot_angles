@@ -25,8 +25,8 @@ def ccc_sum_d_for_best_fit(gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
     # THE ACTUAL VALUES IF THE (x',y') PLANE INTERSECTED THE (x,y) PLANE
     # THROUGH THE ORIGIN (ie: IF  d=0 IN THE PLANE'S EQUATION)
     dep_dist_kpc = get_deproj_dist(
-        gal_dist, Angle(inc_b, unit=u.degree),
-        Angle(pa_b, unit=u.degree), rho_f, phi_f)
+        Angle(pa_b, unit=u.degree), Angle(inc_b, unit=u.degree), gal_dist,
+        rho_f, phi_f)
     # CCC value for the best fit angles.
     ccc_b = ccc(dep_dist_kpc, d_d_f)
 

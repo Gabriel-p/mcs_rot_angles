@@ -40,14 +40,14 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
 
         # 3D distance from clusters to galaxy center, and its error. Both
         # values are expressed in kilo-parsecs.
-        # Center coordinates and distance (in parsecs) to this galaxy.
+        # Also, center coordinates and distance (in parsecs) to this galaxy.
         d_d_g, e_dd_g, gal_cent, gal_dist = dist2CloudCenter.main(
             j, ra_g, dec_g, dm_g, e_dm_g)
 
         # Input minimum projected angular distance values to use in filter.
         # The value is used as: (r_min...]
         rho_lst = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4.]
-        # Select index of r_min value to plot.
+        # Select index of r_min value to plot below the density maps.
         r_idx_save = 2
         for r_idx, r_min in enumerate(rho_lst):
 
@@ -58,11 +58,8 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
                 dist_filter.main(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g,
                                  dm_g, e_dm_g, gal_cent)
 
-            # Calculate deprojected distances for all clusters in this galaxy,
-            # for all inclination and position angles defined in the grid.
-            # These values depend on the coordinates of the clusters, the
-            # rotation angles that define each inclined plane, and the distance
-            # and center coordinates of the galaxy.
+            # Deprojected distance values for each cluster, for each rotated
+            # plane defined by each (i, PA) in the grid.
             dep_dist_i_PA_vals = i_PA_DeprjDist.main(
                 rho_f, phi_f, inc_lst, pa_lst, gal_dist)
             print(('  vdm&C01 deprojected distances obtained for the defined\n'
@@ -70,15 +67,18 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
                    '  allowed: {}'.format(r_min)))
 
             # Obtain coordinates of filtered clusters in the (x,y,z) system.
-            # Used by two of the methods below.
+            # Used by Method-1 and Method-2 below.
             # These coordinates depend on both the center and the distance
             # to the analyzed galaxy.
-            cl_x, cl_y, cl_z = xyz_coords(rho_f, phi_f, gal_dist,
-                                          np.asarray(dm_f))
+            cl_x, cl_y, cl_z = xyz_coords(
+                rho_f, phi_f, gal_dist, np.asarray(dm_f))
 
             # Run once for each method defined.
             inc_best, pa_best, mc_inc_std, mc_pa_std, in_mcarlo, pa_mcarlo,\
                 ccc_sum_d_best = [], [], [], [], [], [], []
+            # Method 1: deproj_dists
+            # Method 2: perp_d_fix_plane
+            # Method 3: perp_d_free_plane
             for method in ['deproj_dists', 'perp_d_fix_plane',
                            'perp_d_free_plane']:
                 if method == 'deproj_dists':

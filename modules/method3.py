@@ -12,7 +12,7 @@ def perp_error(params, xyz):
     a, b, c, d = params
     x, y, z = xyz
     length = np.sqrt(a**2 + b**2 + c**2)
-    return (np.abs(a*x + b*y + c*z + d).sum()/length) / len(x)
+    return (np.abs(a * x + b * y + c * z + d).sum() / length) / len(x)
 
 
 def m3_min_perp_distance(x, y, z, N_min):

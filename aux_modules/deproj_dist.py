@@ -98,13 +98,13 @@ def vdm_2001_dep_dist_kpc(rho, phi, theta, glx_incl, D_0):
     '''
     # Eq 8 from van der Marel & Cioni (2001).
     s = np.sin(phi.radian - theta.radian)
-    A = 0.5 * ((1-s)*np.cos(glx_incl.radian - rho.radian) +
-               (1+s)*np.cos(glx_incl.radian + rho.radian))
+    A = 0.5 * ((1 - s) * np.cos(glx_incl.radian - rho.radian) +
+               (1 + s) * np.cos(glx_incl.radian + rho.radian))
     # This is really D/D_0, to simplify the d_kpc equation.
     D = np.cos(glx_incl.radian) / A
 
     # Apply the cosine law to obtain the deprojected distance in kpc.
-    d_kpc = D_0*np.sqrt(1. + D**2 - 2*D*np.cos(rho.radian))
+    d_kpc = D_0 * np.sqrt(1. + D**2 - 2 * D * np.cos(rho.radian))
 
     # # The above is equivalent to obtaining the (x_p, y_p, z_p) coordinates of
     # # the point on the inclined plane, and calculating its Euclidean
