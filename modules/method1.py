@@ -26,8 +26,8 @@ def m1_ccc_map(dep_dist_i_PA_vals, rand_dist_kpc, N_grid):
             # the van der Marel & Cioni (2001) equations.
             dep_dist_kpc = dep_dist_i_PA_vals[i][j]
 
-            # Calculate CCC between deprojected distances using the ASteca
-            # distance moduli + astropy, and those obtained via the van
+            # Calculate CCC between deprojected distances using the ASteCA
+            # distance moduli , and those obtained via the van
             # der Marel & Cioni (2001) equations.
             c = ccc(dep_dist_kpc, rand_dist_kpc)
 

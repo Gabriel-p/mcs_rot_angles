@@ -88,14 +88,22 @@ Process all data.
 
    1.  m1_ccc_map
        1. ccc
+          Concordance correlation coefficient between deprojected distances
+          obtained using ASteCA's distances and the van der Marel's equations.
    2. interp_dens_map
    3. m2_fix_plane_perp_dist
+      For each (i, theta) pair, calculate the mean of the perpendicular
+      distances of all clusters to that plane.
    4. interp_dens_map
    5. m3_min_perp_distance
       1. perp_error
    6. interp_dens_map
    2. get_angles
+      Extract the best fit angles from all the (i, theta) values tested by
+      the methods 1 and 2. For method 3, call function below. 
       1. angle_betw_planes
+         Transform the (a, b, c, d) plane parameters for the best fit found
+         by Method 3, into (i, theta) angles.
    3. ccc_sum_d_for_best_fit
       1. get_deproj_dist
       2. ccc
