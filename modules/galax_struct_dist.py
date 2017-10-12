@@ -148,15 +148,15 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
                 # Obtain distribution of rotation angles via Monte Carlo random
                 # sampling.
                 inc_pa_mcarlo = monte_carlo_errors(N_maps, method, mc_pars)
-                inc_mcarlo_meth = list(list(zip(*inc_pa_mcarlo))[0])
-                pa_mcarlo_meth = list(list(zip(*inc_pa_mcarlo))[1])
                 # Standard deviations for the angles for *each* method.
-                mc_inc_std.append(np.std(inc_mcarlo_meth))
-                mc_pa_std.append(np.std(pa_mcarlo_meth))
+                i_pa_std = np.std(np.asarray(inc_pa_mcarlo), axis=0)
+                mc_inc_std.append(i_pa_std[0])
+                mc_pa_std.append(i_pa_std[1])
                 print('  Errors obtained.')
 
                 # Save *combined* inclination and position angles obtained via
                 # the Monte  Carlo process. Used just for printing stats.
+                inc_mcarlo_meth, pa_mcarlo_meth = list(zip(*inc_pa_mcarlo))
                 in_mcarlo = in_mcarlo + inc_mcarlo_meth
                 pa_mcarlo = pa_mcarlo + pa_mcarlo_meth
 
@@ -165,9 +165,6 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
                 # The theta angle rotates the ellipse counter-clockwise
                 # starting from the positive x axis.
                 mean_pos, width, height, theta = cov_ellipse(inc_pa_mcarlo)
-                # Calculate standard deviation for inclination and position
-                # angles.
-                i_pa_std = np.std(np.asarray(inc_pa_mcarlo), axis=0)
 
                 # Store parameters for density maps and 1:1 diagonal plots.
                 if r_idx == r_idx_save:

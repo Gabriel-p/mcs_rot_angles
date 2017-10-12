@@ -53,8 +53,8 @@ def procParams(run='fast'):
     # Number of Monte Carlo runs, where the distance to each
     # cluster is randomly drawn from a normal probability distribution.
     # Used to assign errors to the best fit angle values.
-    # Default is 100.  Lower this value for faster processing.
-    N_maps = 10 if run == 'fast' else 100
+    # Default is 500.  Lower this value for faster processing.
+    N_maps = 100 if run == 'fast' else 500
 
     return xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,\
         plane_abc, N_f, xi, yi, N_min, N_maps

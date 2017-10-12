@@ -99,4 +99,12 @@ def monte_carlo_errors(N_maps, method, params):
             # Remove that milestone from the list.
             milestones = milestones[1:]
 
+    # import matplotlib.pyplot as plt
+    # x, y = list(zip(*inc_pa_mcarlo))
+    # plt.subplot(121)
+    # plt.hist(x, bins=50)
+    # plt.subplot(122)
+    # plt.hist(y, bins=50)
+    # plt.show()
+
     return inc_pa_mcarlo
