@@ -58,8 +58,8 @@ def invertDist(incl, theta, ra_0, dec_0, D_0, ra, dec, z_prime):
 
 def rho_phi(ra, dec, glx_ctr):
     """
-    Obtain the angular distance between 'coords' and the center of galaxy (rho)
-    and its position angle (phi).
+    Obtain the angular distance between (ra, dec) coordinates and the center
+    of the galaxy (rho), and its position angle (phi).
     """
 
     # Store clusters' (ra, dec) coordinates in degrees.
@@ -79,7 +79,9 @@ def rho_phi(ra, dec, glx_ctr):
 
 def xyz_coords(rho, phi, D_0, r_dist):
     '''
-    Obtain coordinates in the (x,y,z) system of van der Marel & Cioni (2001).
+    Obtain coordinates in the (x,y,z) system of van der Marel & Cioni (2001),
+    Eq (5).
+
     Values (x, y,z) returned in Kpc.
     '''
     d_kpc = Distance((10**(0.2 * (np.asarray(r_dist) + 5.))) / 1000.,
@@ -91,6 +93,19 @@ def xyz_coords(rho, phi, D_0, r_dist):
     x, y, z = x.value, y.value, z.value
 
     return np.array([x, y, z])
+
+
+def outData(gal, gal_data, dist_mod, e_dm):
+    """
+    Write data to output 'xxx_input_synth.dat' file ('xxx' stands for the
+    processed galaxy.)
+    """
+    data = Table(
+        [gal_data['Name'], gal_data['ra'], gal_data['dec'], dist_mod, e_dm,
+         gal_data['log(age)']],
+        names=['Name', 'ra', 'dec', 'dist_mod', 'e_dm', 'log(age)'])
+    with open(gal.lower() + "_input_synth.dat", 'w') as f:
+        ascii.write(data, f, format='fixed_width', delimiter=' ')
 
 
 def inv_trans_eqs(x_p, y_p, z_p, theta, inc):
@@ -107,19 +122,6 @@ def inv_trans_eqs(x_p, y_p, z_p, theta, inc):
     return x, y, z
 
 
-def outData(gal, gal_data, dist_mod, e_dm):
-    """
-    Write data to output 'xxx_input_synth.dat' file ('xxx' stands for the
-    processed galaxy.)
-    """
-    data = Table(
-        [gal_data['Name'], gal_data['ra'], gal_data['dec'], dist_mod, e_dm,
-         gal_data['log(age)']],
-        names=['Name', 'ra', 'dec', 'dist_mod', 'e_dm', 'log(age)'])
-    with open(gal.lower() + "_input_synth.dat", 'w') as f:
-        ascii.write(data, f, format='fixed_width', delimiter=' ')
-
-
 def make_plot(gal_name, incl, theta, cl_xyz, dm):
     """
     Original link for plotting intersecting planes:
@@ -130,8 +132,8 @@ def make_plot(gal_name, incl, theta, cl_xyz, dm):
     ax = Axes3D(fig)
 
     # Placement 0, 0 would be the bottom left, 1, 1 would be the top right.
-    ax.text2D(0.5, 0.95,
-              r"${}:\;(i, \theta) = ({}, {})$".format(gal_name, incl, theta),
+    ax.text2D(0.4, 0.95,
+              r"${}:\;(\theta, i) = ({}, {})$".format(gal_name, theta, incl),
               transform=ax.transAxes, fontsize=15, color='red')
 
     # Express in radians for calculations.
@@ -143,25 +145,28 @@ def make_plot(gal_name, incl, theta, cl_xyz, dm):
 
     min_X, max_X = min(x_cl) - 2., max(x_cl) + 2.
     min_Y, max_Y = min(y_cl) - 2., max(y_cl) + 2.
+    min_Z, max_Z = min(z_cl) - 2., max(z_cl) + 2.
 
     # x,y plane.
     X, Y = np.meshgrid([min_X, max_X], [min_Y, max_Y])
     Z = np.zeros((2, 2))
 
     # Plot x,y plane.
-    ax.plot_surface(X, Z, Y, color='gray', alpha=.2, linewidth=0, zorder=1)
+    ax.plot_surface(X, Z, Y, color='gray', alpha=.1, linewidth=0, zorder=1)
     # Axis of x,y plane.
     # x axis.
     ax.plot([min_X, max_X], [0., 0.], [0., 0.], ls='--', c='k', zorder=4)
     # Arrow head pointing in the positive x direction.
-    ax.quiver(max_X, 0., 0., max_X, 0., 0., length=0.3,
-              arrow_length_ratio=1., color='k')
+    ax.quiver(max_X, 0., 0., max_X, 0., 0., arrow_length_ratio=.5,
+              length=.1, color='k')
+    ax.text(max_X, 0., -.5, 'x', 'x')
     # y axis.
     ax.plot([0., 0.], [0., 0.], [0., max_Y], ls='--', c='k')
     # Arrow head pointing in the positive y direction.
-    ax.quiver(0., 0., max_Y, 0., 0., max_Y, length=0.3,
-              arrow_length_ratio=1., color='k')
+    ax.quiver(0., 0., max_Y, 0., 0., max_Y, arrow_length_ratio=.8,
+              length=.1, color='k')
     ax.plot([0., 0.], [0., 0.], [min_Y, 0.], ls='--', c='k')
+    ax.text(-.5, 0., max_Y, 'y', 'y')
 
     #
     # A plane is a*x+b*y+c*z+d=0, [a,b,c] is the normal.
@@ -175,24 +180,34 @@ def make_plot(gal_name, incl, theta, cl_xyz, dm):
     Z2_b = (-a * X2_b - b * Y2_b) / c
 
     # Top half of first x',y' inclined plane.
-    ax.plot_surface(X2_t, Z2_t, Y2_t, color='red', alpha=.2, lw=0, zorder=3)
+    ax.plot_surface(X2_t, Z2_t, Y2_t, color='red', alpha=.1, lw=0, zorder=3)
     # Bottom half of inclined plane.
-    ax.plot_surface(X2_t, Z2_b, Y2_b, color='red', alpha=.2, lw=0, zorder=-1)
+    ax.plot_surface(X2_t, Z2_b, Y2_b, color='red', alpha=.1, lw=0, zorder=-1)
     # Axis of x',y' plane.
     # x' axis.
     x_min, y_min, z_min = inv_trans_eqs(min_X, 0., 0., theta, incl)
     x_max, y_max, z_max = inv_trans_eqs(max_X, 0., 0., theta, incl)
     ax.plot([x_min, x_max], [z_min, z_max], [y_min, y_max], ls='--', c='b')
     # Arrow head pointing in the positive x' direction.
-    ax.quiver(x_max, z_max, y_max, x_max, z_max, y_max, length=0.3,
-              arrow_length_ratio=1.2)
+    ax.quiver(x_max, z_max, y_max, x_max, z_max, y_max, length=0.1,
+              arrow_length_ratio=.7)
+    ax.text(x_max, z_max, y_max - .5, "x'", 'x', color='b')
     # y' axis.
     x_min, y_min, z_min = inv_trans_eqs(0., min_Y, 0., theta, incl)
     x_max, y_max, z_max = inv_trans_eqs(0., max_Y, 0., theta, incl)
     ax.plot([x_min, x_max], [z_min, z_max], [y_min, y_max], ls='--', c='g')
     # Arrow head pointing in the positive y' direction.
-    ax.quiver(x_max, z_max, y_max, x_max, z_max, y_max, length=0.3,
-              arrow_length_ratio=1.2, color='g')
+    ax.quiver(x_max, z_max, y_max, x_max, z_max, y_max, length=0.1,
+              arrow_length_ratio=.9, color='g')
+    ax.text(x_max - .5, z_max, y_max, "y'", 'y', color='g')
+    # # z' axis.
+    # x_min, y_min, z_min = inv_trans_eqs(0., 0, min_Z, theta, incl)
+    # x_max, y_max, z_max = inv_trans_eqs(0., 0, max_Z, theta, incl)
+    # ax.plot([x_min, x_max], [z_min, z_max], [y_min, y_max], ls='--', c='y')
+    # # Arrow head pointing in the positive z' direction.
+    # ax.quiver(x_max, z_max, y_max, x_max, z_max, y_max, length=0.1,
+    #           arrow_length_ratio=.9, color='y')
+    # ax.text(x_max - .5, z_max, y_max, "z'", 'z', color='y')
 
     ax.set_xlabel('x (Kpc)')
     ax.set_ylabel('z (Kpc)')
