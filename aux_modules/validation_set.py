@@ -22,8 +22,11 @@ def zDist(N):
     """
 
     # Define maximum vertical distance (in parsec)
-    z_dist = 1000.
+    z_dist = 2000.
     # Generate N random z' vertical distances, in parsec.
+    # To generate the *same* values each time the code is executed, fix the
+    # random seed to any integer value.
+    # np.random.seed(12345)
     z_prime = np.random.uniform(-z_dist, z_dist, N)
 
     return z_prime
@@ -131,10 +134,11 @@ def make_plot(gal_name, incl, theta, cl_xyz, dm):
     fig = plt.figure()
     ax = Axes3D(fig)
 
-    # Placement 0, 0 would be the bottom left, 1, 1 would be the top right.
-    ax.text2D(0.4, 0.95,
-              r"${}:\;(\theta, i) = ({}, {})$".format(gal_name, theta, incl),
-              transform=ax.transAxes, fontsize=15, color='red')
+    # Placement 0, 0 is the bottom left, 1, 1 is the top right.
+    ax.text2D(
+        0.4, 0.95, r"${}:\;(\Theta, i) = ({}, {})$".format(
+            gal_name, theta - 90., incl),
+        transform=ax.transAxes, fontsize=15, color='red')
 
     # Express in radians for calculations.
     incl, theta = np.deg2rad(incl), np.deg2rad(theta)
@@ -227,7 +231,9 @@ def make_plot(gal_name, incl, theta, cl_xyz, dm):
 def main():
     """
     """
-    # Define inclination angles (SMC first, LMC second).
+    # Define inclination angles (i, Theta) (SMC first, LMC second).
+    # 'Theta' is the PA (position angle) measured from the North (positive
+    # y axis in van der Marel et al. 2002, Fig 3)
     rot_angles = ((60, 150.), (30, 140.))
 
     # Root path.
@@ -238,7 +244,10 @@ def main():
     for gal, gal_name in enumerate(['SMC', 'LMC']):
         print("Generating data for {}".format(gal_name))
 
-        incl, theta = rot_angles[gal]
+        incl, Theta = rot_angles[gal]
+        # 'theta' is the position angle measured from the West (positive
+        # x axis), used by Eq (7) in van der Marel & Cioni (2001).
+        theta = Theta + 90.
 
         # Center coordinates and distance for this galaxy.
         gal_center, D_0, e_gal_dist = MCs_data.MCs_data(gal)
