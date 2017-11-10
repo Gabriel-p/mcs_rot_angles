@@ -31,3 +31,49 @@ def m2_fix_plane_perp_dist(plane_abc, x, y, z):
                                np.outer(c_lst, z)), axis=1)
 
     return pl_dists_kpc
+
+
+def standard_fit(X):
+    # The centroid is the origin of the system.
+    # Singular value decomposition
+    U, S, V = np.linalg.svd(X)
+    # The last row of V matrix indicate the eigenvectors of
+    # smallest eigenvalues (singular values).
+    a, b, c = V[-1]
+
+    return a, b, c
+
+
+if __name__ == '__main__':
+
+    import angles2Plane
+    inc_rang, pa_rang = [-89., 89.], [1., 179.]
+    N = 500
+    inc_lst = np.linspace(inc_rang[0], inc_rang[1], N)
+    pa_lst = np.linspace(pa_rang[0], pa_rang[1], N)
+    plane_abc = angles2Plane.main(inc_lst, pa_lst)
+
+    for _ in range(10):
+        d = 0.
+        i = np.random.randint(0, len(plane_abc[0]))
+        a, b, c = plane_abc[0][i], plane_abc[1][i], plane_abc[2][i]
+        print("Real abc(d=0): {:.3f} {:.3f} {:.3f}".format(a, b, c))
+
+        N = 200
+        x, y = np.random.uniform(-5., 5., (2, N))
+        z = (-a * x - b * y - d) / c + np.random.uniform(-2., 2., N)
+
+        pl_dists_kpc = m2_fix_plane_perp_dist(plane_abc, x, y, z)
+        i = np.argmin(pl_dists_kpc)
+        a, b, c = plane_abc[0][i], plane_abc[1][i], plane_abc[2][i]
+        print("M2  abc(d=0): {:.3f} {:.3f} {:.3f}".format(a, b, c))
+        dist = (abs(a*x + b*y + c*z) / np.sqrt(a**2 + b**2 + c**2)).mean()
+        print("Dist: {:.5f}".format(dist))
+
+        a, b, c = standard_fit(np.array([x, y, z]).T)
+        cte = np.sqrt(a**2 + b**2 + c**2)
+        a, b, c = a / cte, b / cte, c / cte
+        print("SVD abc(d=0): {:.3f} {:.3f} {:.3f}".format(a, b, c))
+        dist = (abs(a*x + b*y + c*z) / np.sqrt(a**2 + b**2 + c**2)).mean()
+        # dist = ((a*x + b*y + c*z)**2 / (a**2 + b**2 + c**2)).mean()
+        print("Dist: {:.5f}\n".format(dist))

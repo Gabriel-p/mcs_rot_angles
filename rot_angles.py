@@ -54,9 +54,9 @@ def procParams(run='fast'):
     # cluster is randomly drawn from a normal probability distribution.
     # Used to assign errors to the best fit angle values.
     # Default is 500.  Lower this value for faster processing.
-    N_maps = 100 if run == 'fast' else 500
+    N_maps = 10 if run == 'fast' else 500
 
-    return xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,\
+    return xmin, xmax, ymin, ymax, inc_lst, pa_lst,\
         plane_abc, N_f, xi, yi, N_min, N_maps
 
 
@@ -88,18 +88,18 @@ def main():
     # Set the 'run' parameter to 'fast' for quick processing. Anything else
     # will process the data with default values.
     run = 'fast'
-    xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,\
+    xmin, xmax, ymin, ymax, inc_lst, pa_lst,\
         plane_abc, N_f, xi, yi, N_min, N_maps = procParams(run)
 
     # Obtain galactic structure (inclination + position angles) for MCs
     gal_str_pars, rho_plot_pars = gsd(
-        smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
+        smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
         plane_abc, N_f, xi, yi, N_min, N_maps)
     print('Inclination and position angles for MCs obtained.')
 
     # Make final plots.
     print('Plotting...\n')
-    make_plots(gal_str_pars, rho_plot_pars)
+    # make_plots(gal_str_pars, rho_plot_pars)
 
     print('\nEnd.')
 

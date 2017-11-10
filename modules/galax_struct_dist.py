@@ -1,5 +1,7 @@
 
 import numpy as np
+from astropy.io import ascii
+from astropy.table import Table
 #
 from modules import dist2CloudCenter
 from modules import dist_filter
@@ -15,7 +17,7 @@ from .mc_errors import monte_carlo_errors
 from .cov_ellipse import cov_ellipse
 
 
-def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
+def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
         plane_abc, N_f, xi, yi, N_min, N_maps):
     """
     Calculate the best match for the inclination and position angles of the
@@ -26,10 +28,11 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
 
     # Store parameters needed for plotting the density maps and 1:1 diagonal
     # plots of deprojected distance in Kpc, as well as the r_min plots.
+    gal_name = ['SMC', 'LMC']
     gal_str_pars, rho_plot_pars, table = [[], []], [[], []], []
     for j, gal in enumerate([smc_data, lmc_data]):
         # SMC, LMC = 0, 1
-        print('\nGalaxy:', j)
+        print('\nGalaxy: {}\n'.format(gal_name[j]))
 
         # Equatorial coordinates for clusters in this galaxy.
         ra_g, dec_g = gal['ra'], gal['dec']
@@ -81,14 +84,15 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
             # Method 3: perp_d_free_plane
             for method in ['deproj_dists', 'perp_d_fix_plane',
                            'perp_d_free_plane']:
+                print("\n  Method: {}".format(method))
                 if method == 'deproj_dists':
                     # Store params used to obtain the Monte Carlo errors.
-                    mc_pars = [N_grid, inc_lst, pa_lst, xi, yi, d_d_f, e_dd_f,
+                    mc_pars = [inc_lst, pa_lst, xi, yi, d_d_f, e_dd_f,
                                dep_dist_i_PA_vals]
 
                     # Store CCC density map obtained using the distance values
                     # with no random sampling.
-                    ccc_vals = m1_ccc_map(dep_dist_i_PA_vals, d_d_f, N_grid)
+                    ccc_vals = m1_ccc_map(dep_dist_i_PA_vals, d_d_f)
                     # Interpolate density map into finer/denser grid.
                     dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
                                                        ccc_vals)
@@ -147,18 +151,19 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
 
                 # Obtain distribution of rotation angles via Monte Carlo random
                 # sampling.
+                print("  Obtaining uncertainties.")
                 inc_pa_mcarlo = monte_carlo_errors(N_maps, method, mc_pars)
                 # Standard deviations for the angles for *each* method.
                 i_pa_std = np.std(np.asarray(inc_pa_mcarlo), axis=0)
                 mc_inc_std.append(i_pa_std[0])
                 mc_pa_std.append(i_pa_std[1])
-                print('  Errors obtained.')
+                print('  Uncertainties obtained.')
 
                 # Save *combined* inclination and position angles obtained via
                 # the Monte  Carlo process. Used just for printing stats.
-                inc_mcarlo_meth, pa_mcarlo_meth = list(zip(*inc_pa_mcarlo))
-                in_mcarlo = in_mcarlo + inc_mcarlo_meth
-                pa_mcarlo = pa_mcarlo + pa_mcarlo_meth
+                inc_mcarlo_meth, pa_mcarlo_meth = zip(*inc_pa_mcarlo)
+                in_mcarlo = in_mcarlo + list(inc_mcarlo_meth)
+                pa_mcarlo = pa_mcarlo + list(pa_mcarlo_meth)
 
                 # Calculate mean inclination and position angles, along with
                 # the 1 sigma error ellipsoid (for plotting).
@@ -178,8 +183,6 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
                         [0.1, 7.95, 0.01, 7.95, d_d_f, dep_dist_kpc, age_f,
                          ccc_sum_d_best, '', '', '', ''])
 
-                print(('{} method processed.'.format(method)))
-
             # Number of clusters used in this run. Used for plotting.
             N_clust = len(ra_f)
 
@@ -191,7 +194,7 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
                                      pa_best, mc_pa_std, perp_sum])
 
             # Print info on fit.
-            print('CCC/Perp sum=', ccc_sum_d_best)
+            print('\nCCC/Perp sum=', ccc_sum_d_best)
             print('PA Best, MC std:', pa_best, mc_pa_std)
             print('Inc best, MC std:', inc_best, mc_inc_std)
             # Mean and standard deviation for the rotation angles.
@@ -201,16 +204,25 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
             print('Inc combined MC:', inc_mean, inc_std, '\n')
 
             table.append([
-                "{:.1f}".format(r_min),
-                r"${:.1f}pm{:.1f}$".format(pa_best[0], mc_pa_std[0]),
-                r"${:.1f}pm{:.1f}$".format(inc_best[0], mc_inc_std[0]),
-                r"${:.1f}pm{:.1f}$".format(pa_best[1], mc_pa_std[1]),
-                r"${:.1f}pm{:.1f}$".format(inc_best[1], mc_inc_std[1]),
-                r"${:.1f}pm{:.1f}$".format(pa_best[2], mc_pa_std[2]),
-                r"${:.1f}pm{:.1f}$".format(inc_best[2], mc_inc_std[2]),
-                r"${:.1f}pm{:.1f}$".format(pa_mean, pa_std),
-                r"${:.1f}pm{:.1f}$".format(inc_mean, inc_std)])
+                r"$\rho=${:.1f}".format(r_min),
+                r"$({:.1f}\pm{:.1f}\;;{:.1f}\pm{:.1f})$".format(
+                    pa_best[0], mc_pa_std[0], inc_best[0], mc_inc_std[0]),
+                r"$({:.1f}\pm{:.1f}\;;{:.1f}\pm{:.1f})$".format(
+                    pa_best[1], mc_pa_std[1], inc_best[1], mc_inc_std[1]),
+                r"$({:.1f}\pm{:.1f}\;;{:.1f}\pm{:.1f})$".format(
+                    pa_best[2], mc_pa_std[2], inc_best[2], mc_inc_std[2]),
+                r"$({:.1f}\pm{:.1f}\;;{:.1f}\pm{:.1f})$".format(
+                    pa_mean, pa_std, inc_mean, inc_std)
+            ])
 
-        print(table)
+        # Write values as LaTeX table.
+        data = Table(
+            list(zip(*table)),
+            names=[r'$(\theta, i)$', 'M1', 'M2', 'M3', 'Mean'])
+        ascii.write(
+            data, Writer=ascii.Latex, col_align='|l|rrrr|',
+            caption=gal_name[j],
+            latexdict={'preamble': r'\begin{center}',
+                       'tablefoot': r'\end{center}', 'tabletype': 'table*'})
 
     return gal_str_pars, rho_plot_pars

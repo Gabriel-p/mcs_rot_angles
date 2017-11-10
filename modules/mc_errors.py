@@ -39,8 +39,7 @@ def monte_carlo_errors(N_maps, method, params):
 
     # Unpack params.
     if method == 'deproj_dists':
-        N_grid, inc_lst, pa_lst, xi, yi, d_f, e_d_f, dep_dist_i_PA_vals =\
-            params
+        inc_lst, pa_lst, xi, yi, d_f, e_d_f, dep_dist_i_PA_vals = params
     elif method == 'perp_d_fix_plane':
         inc_lst, pa_lst, xi, yi, dm_f, e_dm_f, rho_f, phi_f, gal_dist,\
             plane_abc = params
@@ -50,13 +49,12 @@ def monte_carlo_errors(N_maps, method, params):
     inc_pa_mcarlo = []
     milestones = [0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     for _ in range(N_maps):
-
         if method == 'deproj_dists':
             # Draw random deprojected distances (in Kpc), obtained via the
             # ASteCA distance moduli + astropy.
             rand_dist = draw_rand_dep_dist(d_f, e_d_f)
             # Obtain density map of CCC (z) values.
-            z = m1_ccc_map(dep_dist_i_PA_vals, rand_dist, N_grid)
+            z = m1_ccc_map(dep_dist_i_PA_vals, rand_dist)
 
             # Obtain (finer) interpolated angles-CCC density map.
             # Rows in zi correspond to inclination values.
@@ -95,7 +93,7 @@ def monte_carlo_errors(N_maps, method, params):
         percentage_complete = (100. * (_ + 1) / N_maps)
         while len(milestones) > 0 and \
                 percentage_complete >= milestones[0]:
-            # print " {:>3}% done".format(milestones[0])
+            # print(" {:>3}% done".format(milestones[0]))
             # Remove that milestone from the list.
             milestones = milestones[1:]
 
