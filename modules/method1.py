@@ -13,7 +13,7 @@ def ccc(l1, l2):
     return ccc_val
 
 
-# def m1_ccc_map_OLD(dep_dist_i_PA_vals, rand_dist_kpc, N_grid):
+# def m1_ccc_map(dep_dist_i_PA_vals, rand_dist_kpc, N_grid=40):
 #     '''
 #     Obtain CCC value comparing the deprojected distances calculated for
 #     each plane defined by an inclination and position angle, with the values
@@ -47,10 +47,14 @@ def m1_ccc_map(dep_dist_i_PA_vals, rand_dist_kpc):
     Source: https://stackoverflow.com/a/47225031/1391441
     """
 
-    a, b = np.asarray(dep_dist_i_PA_vals), np.asarray(rand_dist_kpc)
-    ac = a - a.mean(axis=-1, keepdims=True)
-    N_clusters = len(b)
-    bc = (b - b.mean()) / (N_clusters - 1)
-    ccc_lst = np.dot(ac, bc)
+    l1, l2 = np.asarray(dep_dist_i_PA_vals), np.asarray(rand_dist_kpc)
+    l1_c = l1 - l1.mean(axis=-1, keepdims=True)
+    N_clusters = len(l2)
+    l2_c = (l2 - l2.mean()) / (N_clusters - 1)
+    cov = np.dot(l1_c, l2_c)
 
-    return ccc_lst
+    ccc_lst = 2 * cov / (
+        np.var(l1, axis=2) + np.var(l2) +
+        (np.mean(l1, axis=2) - np.mean(l2)) ** 2)
+
+    return ccc_lst.flatten()

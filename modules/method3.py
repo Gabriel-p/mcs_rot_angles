@@ -23,7 +23,7 @@ def unit_length(params):
     return a**2 + b**2 + c**2 - 1
 
 
-def m3_min_perp_distance(x, y, z, N_min):
+def m3_min_perp_distance_OLD(x, y, z, N_min):
     """
     Find coefficients of best plane fit to given points. Plane equation is
     in the form:
@@ -82,53 +82,7 @@ def m3_min_perp_distance(x, y, z, N_min):
     return abcd
 
 
-def m3_min_perp_distance_Z(x, y, z):
-    # do fit
-    tmp_A = []
-    tmp_b = []
-    for i in range(len(x)):
-        tmp_A.append([x[i], y[i], 1])
-        tmp_b.append(z[i])
-    b = np.matrix(tmp_b).T
-    A = np.matrix(tmp_A)
-    fit = (A.T * A).I * A.T * b
-    # errors = b - A * fit
-    # residual = np.linalg.norm(errors)
-
-    # print("%f x + %f y + %f = z" % (fit[0], fit[1], fit[2]))
-    ap, bp, cp, dp = fit[0].item(0), fit[1].item(0), -1., fit[2].item(0)
-
-    # print("errors:", errors)
-    # print("residual:", residual)
-
-    # import matplotlib.pyplot as plt
-    # from mpl_toolkits.mplot3d import Axes3D
-
-    # # plot raw data
-    # plt.figure()
-    # ax = plt.subplot(111, projection='3d')
-    # ax.scatter(x, y, z, color='b')
-
-    # # plot plane
-    # xlim = ax.get_xlim()
-    # ylim = ax.get_ylim()
-    # X, Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
-    #                    np.arange(ylim[0], ylim[1]))
-    # Z = np.zeros(X.shape)
-    # for r in range(X.shape[0]):
-    #     for c in range(X.shape[1]):
-    #         Z[r, c] = fit[0] * X[r, c] + fit[1] * Y[r, c] + fit[2]
-    # ax.plot_wireframe(X, Y, Z, color='k')
-
-    # ax.set_xlabel('x')
-    # ax.set_ylabel('y')
-    # ax.set_zlabel('z')
-    # plt.show()
-
-    return ap, bp, cp, dp
-
-
-def standard_fit(X):
+def m3_min_perp_distance(x, y, z):
     """
     Linear algebra standard fitting module
     (C) 2013 hashnote.net, Alisue
@@ -163,18 +117,24 @@ def standard_fit(X):
     Returns:
         [C, N] where C is a centroid vector and N is a normal vector
     """
+    xyz = np.array([x, y, z]).T
+
     # Find the average of points (centroid) along the columns
-    C = np.average(X, axis=0)
+    C = np.average(xyz, axis=0)
 
     # Create CX vector (centroid to point) matrix
-    CX = X - C
+    CX = xyz - C
     # Singular value decomposition
     U, S, V = np.linalg.svd(CX)
     # The last row of V matrix indicate the eigenvectors of
     # smallest eigenvalues (singular values).
     N = V[-1]
 
-    return C, N
+    x0, y0, z0 = C
+    a, b, c = N
+    d = -(a * x0 + b * y0 + c * z0)
+
+    return (a, b, c, d)
 
 
 if __name__ == '__main__':
@@ -202,10 +162,7 @@ if __name__ == '__main__':
 
     from best_fit_angles import angle_betw_planes
 
-    C, N = standard_fit(np.array([x, y, z]).T)
-    x0, y0, z0 = C
-    a, b, c = N
-    d = -(a * x0 + b * y0 + c * z0)
+    a, b, c, d = standard_fit(np.array([x, y, z]).T)
     print("SVD  abc(d=1): {:.3f} {:.3f} {:.3f}".format(a / d, b / d, c / d))
     print("Perp err: {:.5f}".format(perp_error((a, b, c, d), (x, y, z))))
     print("(i, theta): {}, {}".format(*angle_betw_planes([a, b, c, d])))

@@ -45,11 +45,6 @@ def procParams(run='fast'):
     N_f = 20 if run == 'fast' else 200
     xi, yi = inc_PA_grid(N_f, inc_rang, pa_rang)
 
-    # Number of iterations for the minimization algorithm that searches for the
-    # best plane fit to the clusters, with no constrains imposed (method 3).
-    # Default is 100. Lower this value for faster processing.
-    N_min = 10 if run == 'fast' else 100
-
     # Number of Monte Carlo runs, where the distance to each
     # cluster is randomly drawn from a normal probability distribution.
     # Used to assign errors to the best fit angle values.
@@ -57,7 +52,7 @@ def procParams(run='fast'):
     N_maps = 10 if run == 'fast' else 500
 
     return xmin, xmax, ymin, ymax, inc_lst, pa_lst,\
-        plane_abc, N_f, xi, yi, N_min, N_maps
+        plane_abc, N_f, xi, yi, N_maps
 
 
 def make_plots(gal_str_pars, rho_plot_pars):
@@ -87,19 +82,19 @@ def main():
     # Processing parameters.
     # Set the 'run' parameter to 'fast' for quick processing. Anything else
     # will process the data with default values.
-    run = 'fast'
+    run = 'fast2'
     xmin, xmax, ymin, ymax, inc_lst, pa_lst,\
-        plane_abc, N_f, xi, yi, N_min, N_maps = procParams(run)
+        plane_abc, N_f, xi, yi, N_maps = procParams(run)
 
     # Obtain galactic structure (inclination + position angles) for MCs
     gal_str_pars, rho_plot_pars = gsd(
         smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
-        plane_abc, N_f, xi, yi, N_min, N_maps)
+        plane_abc, N_f, xi, yi, N_maps)
     print('Inclination and position angles for MCs obtained.')
 
     # Make final plots.
     print('Plotting...\n')
-    # make_plots(gal_str_pars, rho_plot_pars)
+    make_plots(gal_str_pars, rho_plot_pars)
 
     print('\nEnd.')
 

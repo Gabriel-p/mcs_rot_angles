@@ -105,11 +105,9 @@ def get_angles(method, best_angles_pars):
         # Max CCC value in map.
         # z_b = np.amax(zi)
     elif method == 'perp_d_fix_plane':
-        xi, yi, zi = best_angles_pars
-        # Obtain index of minimum sum of absolute distances to plane value.
-        min_d_idx = np.unravel_index(zi.argmin(), zi.shape)
+        plane_abcd = best_angles_pars
         # Calculate "best" angle values.
-        inc_b, pa_b = xi[min_d_idx[0]], yi[min_d_idx[1]]
+        inc_b, pa_b = angle_betw_planes(plane_abcd)
         # Min sum of abs(distances 2 plane) value in map.
         # z_b = np.amin(zi)
     elif method == 'perp_d_free_plane':

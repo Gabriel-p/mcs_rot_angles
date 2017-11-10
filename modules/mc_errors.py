@@ -41,13 +41,12 @@ def monte_carlo_errors(N_maps, method, params):
     if method == 'deproj_dists':
         inc_lst, pa_lst, xi, yi, d_f, e_d_f, dep_dist_i_PA_vals = params
     elif method == 'perp_d_fix_plane':
-        inc_lst, pa_lst, xi, yi, dm_f, e_dm_f, rho_f, phi_f, gal_dist,\
-            plane_abc = params
+        dm_f, e_dm_f, rho_f, phi_f, gal_dist = params
     elif method == 'perp_d_free_plane':
-        dm_f, e_dm_f, rho_f, phi_f, gal_dist, N_min = params
+        dm_f, e_dm_f, rho_f, phi_f, gal_dist = params
 
     inc_pa_mcarlo = []
-    milestones = [0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    # milestones = [0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     for _ in range(N_maps):
         if method == 'deproj_dists':
             # Draw random deprojected distances (in Kpc), obtained via the
@@ -70,11 +69,7 @@ def monte_carlo_errors(N_maps, method, params):
             rand_dist = draw_rand_dist_mod(dm_f, e_dm_f)
             # Positions in the (x,y,z) system.
             x, y, z = xyz_coords(rho_f, phi_f, gal_dist, rand_dist)
-            # Obtain density map (z), composed of the sum of the absolute
-            # values of the distances to each plane.
-            z = m2_fix_plane_perp_dist(plane_abc, x, y, z)
-            zi = interp_dens_map(inc_lst, pa_lst, xi, yi, z)
-            best_angles_pars = [xi, yi, zi]
+            best_angles_pars = m2_fix_plane_perp_dist(x, y, z)
 
         elif method == 'perp_d_free_plane':
             # Draw random distances moduli, obtained via ASteCA.
@@ -83,19 +78,19 @@ def monte_carlo_errors(N_maps, method, params):
             # distance moduli values.
             x, y, z = xyz_coords(rho_f, phi_f, gal_dist, rand_dist)
             # Store params used to obtain the Monte Carlo errors.
-            best_angles_pars = m3_min_perp_distance(x, y, z, N_min)
+            best_angles_pars = m3_min_perp_distance(x, y, z)
 
         inc_b, pa_b = get_angles(method, best_angles_pars)
 
         inc_pa_mcarlo.append([inc_b, pa_b])
 
-        # Print percentage done.
-        percentage_complete = (100. * (_ + 1) / N_maps)
-        while len(milestones) > 0 and \
-                percentage_complete >= milestones[0]:
-            # print(" {:>3}% done".format(milestones[0]))
-            # Remove that milestone from the list.
-            milestones = milestones[1:]
+        # # Print percentage done.
+        # percentage_complete = (100. * (_ + 1) / N_maps)
+        # while len(milestones) > 0 and \
+        #         percentage_complete >= milestones[0]:
+        #     print(" {:>3}% done".format(milestones[0]))
+        #     # Remove that milestone from the list.
+        #     milestones = milestones[1:]
 
     # import matplotlib.pyplot as plt
     # x, y = list(zip(*inc_pa_mcarlo))

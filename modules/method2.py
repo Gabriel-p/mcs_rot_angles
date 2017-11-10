@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def m2_fix_plane_perp_dist(plane_abc, x, y, z):
+def perp_dist_grid(plane_abc, x, y, z):
     '''
     Calculate the distance to each inclined plane for all the clusters in
     the galaxy being analyzed. Plane equation in the form:
@@ -33,15 +33,18 @@ def m2_fix_plane_perp_dist(plane_abc, x, y, z):
     return pl_dists_kpc
 
 
-def standard_fit(X):
-    # The centroid is the origin of the system.
+def m2_fix_plane_perp_dist(x, y, z):
+    """
+    Solve using the SVD method fixing the origin of the system as the centroid.
+    """
+    xyz = np.array([x, y, z]).T
     # Singular value decomposition
-    U, S, V = np.linalg.svd(X)
+    U, S, V = np.linalg.svd(xyz)
     # The last row of V matrix indicate the eigenvectors of
     # smallest eigenvalues (singular values).
     a, b, c = V[-1]
 
-    return a, b, c
+    return (a, b, c, 0.)
 
 
 if __name__ == '__main__':

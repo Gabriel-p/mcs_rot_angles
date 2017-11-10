@@ -11,6 +11,7 @@ from .interp_dens_map import interp_dens_map
 from .best_fit_angles import get_angles
 from .method1 import m1_ccc_map
 from .method2 import m2_fix_plane_perp_dist
+from .method2 import perp_dist_grid
 from .method3 import m3_min_perp_distance
 from .ccc_sum_d_for_best_fit import ccc_sum_d_for_best_fit
 from .mc_errors import monte_carlo_errors
@@ -18,7 +19,7 @@ from .cov_ellipse import cov_ellipse
 
 
 def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
-        plane_abc, N_f, xi, yi, N_min, N_maps):
+        plane_abc, N_f, xi, yi, N_maps):
     """
     Calculate the best match for the inclination and position angles of the
     MCs, based on the distance assigned to each cluster by ASteCA.
@@ -101,53 +102,35 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
 
                 elif method == 'perp_d_fix_plane':
                     # Store params used to obtain the Monte Carlo errors.
-                    mc_pars = [inc_lst, pa_lst, xi, yi, dm_f, e_dm_f, rho_f,
-                               phi_f, gal_dist, plane_abc]
+                    mc_pars = [dm_f, e_dm_f, rho_f, phi_f, gal_dist]
 
                     # Store density map obtained using the distance values with
                     # no random sampling.
-                    pl_dists_kpc = m2_fix_plane_perp_dist(
-                        plane_abc, cl_x, cl_y, cl_z)
+                    M2_abcd = m2_fix_plane_perp_dist(cl_x, cl_y, cl_z)
+
+                    # Obtain map of values in grid. For plotting
+                    pl_dists_kpc = perp_dist_grid(plane_abc, cl_x, cl_y, cl_z)
                     # Interpolate density map into finer/denser grid.
                     dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
                                                        pl_dists_kpc)
+                    # Make a copy for M3
+                    dens_vals_interp_M3 = dens_vals_interp[:]
                     # Data to pass to extract best fit angles.
-                    best_angles_pars = [xi, yi, dens_vals_interp]
+                    best_angles_pars = M2_abcd
 
                 elif method == 'perp_d_free_plane':
                     # Store params used to obtain the Monte Carlo errors.
-                    mc_pars = [dm_f, e_dm_f, rho_f, phi_f, gal_dist, N_min]
+                    mc_pars = [dm_f, e_dm_f, rho_f, phi_f, gal_dist]
 
                     # Obtain a,b,c,d coefficients for the best fit plane,
                     # given the set of clusters passed in the (x,y,z) system.
                     # The best fit is obtained minimizing the perpendicular
                     # distance to the plane.
-                    best_angles_pars = m3_min_perp_distance(
-                        cl_x, cl_y, cl_z, N_min)
+                    best_angles_pars = m3_min_perp_distance(cl_x, cl_y, cl_z)
 
-                    # Obtain density map from Method 2. Used only for plotting
-                    # a density map, since Method 3 doesn't generate one.
-                    pl_dists_kpc = m2_fix_plane_perp_dist(
-                        plane_abc, cl_x, cl_y, cl_z)
-                    dens_vals_interp = interp_dens_map(
-                        inc_lst, pa_lst, xi, yi, pl_dists_kpc)
-
-                # Best fit angles for the density map with no random sampling.
-                inc_b, pa_b = get_angles(method, best_angles_pars)
-                # Save best fit angles obtained with all methods. Their
-                # average is the final value for each rotation angle.
-                inc_best.append(inc_b)
-                pa_best.append(pa_b)
-                print('  Best fit for rotation angles obtained.')
-
-                # Retrieve the CCC value and the sum of the abs values of
-                # the deprojected distances, for the distances to the plane
-                # generated via the best fit rotation angles, versus the
-                # ones given by ASteCA + astropy.
-                dep_dist_kpc, ccc_b, sum_d_b = ccc_sum_d_for_best_fit(
-                    gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
-                    best_angles_pars, inc_b, pa_b, method)
-                ccc_sum_d_best.append([ccc_b, sum_d_b])
+                    # Density map borrowed from M2, since M3 doesn't
+                    # generate one.
+                    pl_dists_kpc = dens_vals_interp_M3
 
                 # Obtain distribution of rotation angles via Monte Carlo random
                 # sampling.
@@ -170,6 +153,23 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
                 # The theta angle rotates the ellipse counter-clockwise
                 # starting from the positive x axis.
                 mean_pos, width, height, theta = cov_ellipse(inc_pa_mcarlo)
+
+                # Best fit angles for the density map with no random sampling.
+                inc_b, pa_b = get_angles(method, best_angles_pars)
+                # inc_b, pa_b = np.mean(np.asarray(inc_pa_mcarlo), axis=0)
+                # Save best fit angles obtained with all methods. Their
+                # average is the final value for each rotation angle.
+                inc_best.append(inc_b)
+                pa_best.append(pa_b)
+
+                # Retrieve the CCC value and the sum of the abs values of
+                # the deprojected distances, for the distances to the plane
+                # generated via the best fit rotation angles, versus the
+                # ones given by ASteCA + astropy.
+                dep_dist_kpc, ccc_b, sum_d_b = ccc_sum_d_for_best_fit(
+                    gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
+                    best_angles_pars, inc_b, pa_b, method)
+                ccc_sum_d_best.append([ccc_b, sum_d_b])
 
                 # Store parameters for density maps and 1:1 diagonal plots.
                 if r_idx == r_idx_save:
