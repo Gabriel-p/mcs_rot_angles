@@ -156,9 +156,9 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
 
                 # Save *combined* inclination and position angles obtained via
                 # the Monte  Carlo process. Used just for printing stats.
-                inc_mcarlo_meth, pa_mcarlo_meth = list(zip(*inc_pa_mcarlo))
-                in_mcarlo = in_mcarlo + inc_mcarlo_meth
-                pa_mcarlo = pa_mcarlo + pa_mcarlo_meth
+                inc_mcarlo_meth, pa_mcarlo_meth = zip(*inc_pa_mcarlo)
+                in_mcarlo = in_mcarlo + list(inc_mcarlo_meth)
+                pa_mcarlo = pa_mcarlo + list(pa_mcarlo_meth)
 
                 # Calculate mean inclination and position angles, along with
                 # the 1 sigma error ellipsoid (for plotting).
