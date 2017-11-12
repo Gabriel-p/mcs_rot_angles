@@ -25,10 +25,10 @@ def perp_dist_grid(plane_abc, x, y, z):
     '''
     # Unpack lists of inclined planes coefficients.
     a_lst, b_lst, c_lst = plane_abc
-    # Calculate the mean of the (positive) distances to each inclined
+    # Calculate the mean of the *squared* distances to each inclined
     # plane.
-    pl_dists_kpc = np.mean(abs(np.outer(a_lst, x) + np.outer(b_lst, y) +
-                               np.outer(c_lst, z)), axis=1)
+    pl_dists_kpc = np.mean((np.outer(a_lst, x) + np.outer(b_lst, y) +
+                            np.outer(c_lst, z))**2, axis=1)
 
     return pl_dists_kpc
 
