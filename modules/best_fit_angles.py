@@ -25,6 +25,7 @@ def angle_betw_planes(plane_abcd):
         elif y_int < 0.:
             t = abs(np.arctan2(y_int, x_int) * 180. / np.pi)
     else:
+        # With d=0, fix x=1 and obtain y
         x_int, y_int = 1., -a / b
         if y_int > 0.:
             t = np.arctan2(y_int, x_int) * 180. / np.pi
