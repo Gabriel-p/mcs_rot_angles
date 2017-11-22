@@ -221,7 +221,7 @@ def make_plot(gal_name, incl, theta, cl_xyz, dm):
     ax.axis('equal')
     ax.axis('tight')
     # This controls the initial orientation of the displayed 3D plot.
-    # ‘elev’ stores the elevation angle in the z plane. ‘azim’ stores the
+    # 'elev' stores the elevation angle in the z plane. 'azim' stores the
     # azimuth angle in the x,y plane.
     ax.view_init(elev=0., azim=-90.)
     plt.show()
