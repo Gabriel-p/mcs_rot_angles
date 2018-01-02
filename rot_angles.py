@@ -80,10 +80,10 @@ def make_plots(gal_str_pars, rho_plot_pars, plot_3D_pars, dpi):
     '''
     Make each plot sequentially.
     '''
-    # make_angles_plot(gal_str_pars, dpi)
-    # print('Inclination vs position angles plot done.')
-    # make_rho_min_plot(rho_plot_pars, dpi)
-    # print('Rho min plot done.')
+    make_angles_plot(gal_str_pars, dpi)
+    print('Inclination vs position angles plot done.')
+    make_rho_min_plot(rho_plot_pars, dpi)
+    print('Rho min plot done.')
     make_3Dplot(plot_3D_pars, dpi)
     print('3D plot done.')
     # make_dist_2_cents(in_params)

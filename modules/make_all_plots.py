@@ -612,7 +612,7 @@ def make_3Dplot(plot_3D_pars, dpi):
     Original link for plotting intersecting planes:
     http://stackoverflow.com/a/14825951/1391441
     """
-    fig = plt.figure(figsize=(20, 20))
+    fig = plt.figure(figsize=(20, 17))
     gs = gridspec.GridSpec(2, 2)
 
     gal_name = ['SMC', 'LMC']
