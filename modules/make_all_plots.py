@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.offsetbox as offsetbox
@@ -343,7 +344,7 @@ def diag_plots(in_pars):
     cbar.ax.tick_params(labelsize=xy_font_s - 3)
 
 
-def make_angles_plot(gal_str_pars):
+def make_angles_plot(gal_str_pars, dpi):
     '''
     Plot inclination and position angles density maps for both galaxies.
     '''
@@ -388,7 +389,7 @@ def make_angles_plot(gal_str_pars):
         diag_plots(pl_params)
 
     fig.tight_layout()
-    plt.savefig('output/MCs_deproj_dist_angles.png', dpi=300,
+    plt.savefig('output/MCs_deproj_dist_angles.png', dpi=dpi,
                 bbox_inches='tight')
 
 
@@ -483,7 +484,7 @@ def pl_rho_var(in_pars):
         cbar.ax.invert_yaxis()
 
 
-def make_rho_min_plot(rho_plot_pars):
+def make_rho_min_plot(rho_plot_pars, dpi):
     '''
     Plot variation of the inclination and position angles with the selected
     minimum projected angular density value, for both galaxies.
@@ -514,5 +515,129 @@ def make_rho_min_plot(rho_plot_pars):
         pl_rho_var(pl_params)
 
     fig.tight_layout()
-    plt.savefig('output/MCs_angles_var_w_rho.png', dpi=300,
+    plt.savefig('output/MCs_angles_var_w_rho.png', dpi=dpi,
                 bbox_inches='tight')
+
+
+def inv_trans_eqs(x_p, y_p, z_p, theta, inc):
+    """
+    Inverse set of equations. Transform inclined plane system (x',y',z')
+    into face on sky system (x,y,z).
+    """
+    x = x_p * np.cos(theta.radian) -\
+        y_p * np.cos(inc.radian) * np.sin(theta.radian) -\
+        z_p * np.sin(inc.radian) * np.sin(theta.radian)
+    y = x_p * np.sin(theta.radian) +\
+        y_p * np.cos(inc.radian) * np.cos(theta.radian) +\
+        z_p * np.sin(inc.radian) * np.cos(theta.radian)
+    z = -1. * y_p * np.sin(inc.radian) + z_p * np.cos(inc.radian)
+
+    return x, y, z
+
+
+def plotAxis(ax, D_0, inc, theta, cl_xyz, dm_f):
+    # Plot clusters in x,y,z system.
+    x_cl, y_cl, z_cl = cl_xyz
+    if cl_xyz.size:
+        SC = ax.scatter(x_cl, z_cl, y_cl, c=dm_f, s=50)
+
+    # min_X, max_X = min(x_cl) - 2., max(x_cl) + 2.
+    # min_Y, max_Y = min(y_cl) - 2., max(y_cl) + 2.
+    min_X, max_X = -6., 6.
+    min_Y, max_Y = -6., 6.
+
+    # Define the projected x,y plane (the "sky" plane).
+    X, Y = np.meshgrid([min_X, max_X], [min_Y, max_Y])
+    Z = np.zeros((2, 2))
+    # Plot x,y plane.
+    ax.plot_surface(X, Z, Y, color='gray', alpha=.2, linewidth=0, zorder=1)
+    # Axis of x,y plane.
+    # x axis.
+    ax.plot([min_X, max_X], [0., 0.], [0., 0.], ls='--', c='k', zorder=4)
+    # Arrow head pointing in the positive x direction.
+    ax.quiver(max_X * .9, 0., 0., max_X, 0., 0., length=0.1,
+              arrow_length_ratio=.6, color='k')
+    # y axis.
+    ax.plot([0., 0.], [0., 0.], [0., max_Y], ls='--', c='k')
+    # Arrow head pointing in the positive y direction.
+    ax.quiver(0., 0., max_Y * .9, 0., 0., max_Y, length=0.1,
+              arrow_length_ratio=.6, color='k')
+    ax.plot([0., 0.], [0., 0.], [min_Y, 0.], ls='--', c='k')
+
+    # A plane is a*x+b*y+c*z+d=0, [a,b,c] is the normal vector.
+    a, b, c = -1. * np.sin(theta.radian) * np.sin(inc.radian),\
+        np.cos(theta.radian) * np.sin(inc.radian),\
+        np.cos(inc.radian)
+
+    # Rotated plane.
+    X2_t, Y2_t = np.meshgrid([min_X, max_X], [0, max_Y])
+    Z2_t = (-a * X2_t - b * Y2_t) / c
+    X2_b, Y2_b = np.meshgrid([min_X, max_X], [min_Y, 0])
+    Z2_b = (-a * X2_b - b * Y2_b) / c
+
+    # Top half of first x',y' inclined plane.
+    ax.plot_surface(X2_t, Z2_t, Y2_t, color='red', alpha=.2, lw=0, zorder=3)
+    # Bottom half of inclined plane.
+    ax.plot_surface(X2_t, Z2_b, Y2_b, color='red', alpha=.2, lw=0, zorder=-1)
+    # Axis of x',y' plane.
+    # x' axis.
+    x_min, y_min, z_min = inv_trans_eqs(min_X, 0., 0., theta, inc)
+    x_max, y_max, z_max = inv_trans_eqs(max_X, 0., 0., theta, inc)
+    ax.plot([x_min, x_max], [z_min, z_max], [y_min, y_max], ls='--', c='b')
+    # Arrow head pointing in the positive x' direction.
+    ax.quiver(x_max, z_max, y_max, x_max, z_max, y_max, length=0.1,
+              arrow_length_ratio=.6)
+    # y' axis.
+    x_min, y_min, z_min = inv_trans_eqs(0., min_Y, 0., theta, inc)
+    x_max, y_max, z_max = inv_trans_eqs(0., max_Y, 0., theta, inc)
+    ax.plot([x_min, x_max], [z_min, z_max], [y_min, y_max], ls='--', c='g')
+    # Arrow head pointing in the positive y' direction.
+    ax.quiver(x_max, z_max, y_max, x_max, z_max, y_max, length=0.1,
+              arrow_length_ratio=.6, color='g')
+
+    # ax.set_ylim(max_Y, min_Y)
+    ax.set_xlim(min_Y, max_Y)
+    ax.set_ylim(max_Y, min_Y)
+    ax.set_zlim(min_Y, max_Y)
+
+    ax.set_xlabel('x (Kpc)')
+    ax.set_ylabel('z (Kpc)')
+    ax.set_zlabel('y (Kpc)')
+
+    return SC
+
+
+def make_3Dplot(plot_3D_pars, dpi):
+    """
+    Original link for plotting intersecting planes:
+    http://stackoverflow.com/a/14825951/1391441
+    """
+    fig = plt.figure(figsize=(20, 20))
+    gs = gridspec.GridSpec(2, 2)
+
+    gal_name = ['SMC', 'LMC']
+    for i, pars in enumerate(plot_3D_pars):
+
+        D_0, inc, theta, cl_xyz, dm_f = pars
+
+        for j in [0, 1]:
+            ax = fig.add_subplot(gs[(i, j)], projection='3d')
+
+            SC = plotAxis(ax, D_0, inc, theta, cl_xyz, dm_f)
+
+            # Orientation of 3D axis.
+            if j == 0:
+                ax.set_title(
+                    r"{} ($\Theta={:.0f}^{{\circ}},\;"
+                    "i={:.0f}^{{\circ}}$)".format(
+                        gal_name[i], theta.value, inc.value))
+                ax.view_init(elev=20., azim=-90.)
+            else:
+                plt.colorbar(SC, shrink=0.7, aspect=25, format='%.2f')
+                ax.view_init(elev=35., azim=-25.)
+
+        # ax.axis('equal')
+        # ax.axis('tight')
+
+    fig.tight_layout()
+    plt.savefig('output/MCs_3D.png', dpi=dpi, bbox_inches='tight')

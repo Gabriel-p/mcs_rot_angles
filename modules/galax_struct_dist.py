@@ -1,5 +1,6 @@
 
 import numpy as np
+from astropy.coordinates import Angle
 #
 from modules import dist2CloudCenter
 from modules import dist_filter
@@ -15,8 +16,8 @@ from .mc_errors import monte_carlo_errors
 from .cov_ellipse import cov_ellipse
 
 
-def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
-        plane_abc, N_f, xi, yi, N_min, N_maps):
+def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
+        plane_abc, N_f, xi, yi, N_min, N_maps, rho_lst, r_idx_save, method_3d):
     """
     Calculate the best match for the inclination and position angles of the
     MCs, based on the distance assigned to each cluster by ASteCA.
@@ -26,10 +27,11 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
 
     # Store parameters needed for plotting the density maps and 1:1 diagonal
     # plots of deprojected distance in Kpc, as well as the r_min plots.
-    gal_str_pars, rho_plot_pars, table = [[], []], [[], []], []
+    gal_str_pars, rho_plot_pars, plot_3D_pars, table =\
+        [[], []], [[], []], [[], []], []
     for j, gal in enumerate([smc_data, lmc_data]):
-        # SMC, LMC = 0, 1
-        print('\nGalaxy:', j)
+        gal_name = ['SMC', 'LMC']
+        print('\nGalaxy:', gal_name[j])
 
         # Equatorial coordinates for clusters in this galaxy.
         ra_g, dec_g = gal['ra'], gal['dec']
@@ -44,11 +46,6 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
         d_d_g, e_dd_g, gal_cent, gal_dist = dist2CloudCenter.main(
             j, ra_g, dec_g, dm_g, e_dm_g)
 
-        # Input minimum projected angular distance values to use in filter.
-        # The value is used as: (r_min...]
-        rho_lst = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4.]
-        # Select index of r_min value to plot below the density maps.
-        r_idx_save = 2
         for r_idx, r_min in enumerate(rho_lst):
 
             # Filter clusters by distance to center of galaxy.
@@ -62,9 +59,9 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
             # plane defined by each (i, PA) in the grid.
             dep_dist_i_PA_vals = i_PA_DeprjDist.main(
                 rho_f, phi_f, inc_lst, pa_lst, gal_dist)
-            print(('  vdm&C01 deprojected distances obtained for the defined\n'
-                   '  grid of rotation angles. Minimum angular distance\n'
-                   '  allowed: {}'.format(r_min)))
+            print((' vdm&C01 deprojected distances obtained for the defined\n'
+                   ' grid of rotation angles. Minimum angular distance\n'
+                   ' allowed: {}'.format(r_min)))
 
             # Obtain coordinates of filtered clusters in the (x,y,z) system.
             # Used by Method-1 and Method-2 below.
@@ -81,14 +78,15 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
             # Method 3: perp_d_free_plane
             for method in ['deproj_dists', 'perp_d_fix_plane',
                            'perp_d_free_plane']:
+                print('  Processing method: {}'.format(method))
                 if method == 'deproj_dists':
                     # Store params used to obtain the Monte Carlo errors.
-                    mc_pars = [N_grid, inc_lst, pa_lst, xi, yi, d_d_f, e_dd_f,
+                    mc_pars = [inc_lst, pa_lst, xi, yi, d_d_f, e_dd_f,
                                dep_dist_i_PA_vals]
 
                     # Store CCC density map obtained using the distance values
                     # with no random sampling.
-                    ccc_vals = m1_ccc_map(dep_dist_i_PA_vals, d_d_f, N_grid)
+                    ccc_vals = m1_ccc_map(dep_dist_i_PA_vals, d_d_f)
                     # Interpolate density map into finer/denser grid.
                     dens_vals_interp = interp_dens_map(inc_lst, pa_lst, xi, yi,
                                                        ccc_vals)
@@ -178,7 +176,13 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
                         [0.1, 7.95, 0.01, 7.95, d_d_f, dep_dist_kpc, age_f,
                          ccc_sum_d_best, '', '', '', ''])
 
-                print(('{} method processed.'.format(method)))
+            if r_idx == r_idx_save:
+                method_3d = 1
+                i = Angle(inc_best[method_3d], unit='deg')
+                pa = Angle(pa_best[method_3d], unit='deg')
+                # Store parameters for the 3D plot.
+                plot_3D_pars[j] = [
+                    gal_dist, i, pa, np.array([cl_x, cl_y, cl_z]), dm_f]
 
             # Number of clusters used in this run. Used for plotting.
             N_clust = len(ra_f)
@@ -213,4 +217,4 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, N_grid, inc_lst, pa_lst,
 
         print(table)
 
-    return gal_str_pars, rho_plot_pars
+    return gal_str_pars, rho_plot_pars, plot_3D_pars

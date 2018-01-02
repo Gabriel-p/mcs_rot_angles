@@ -39,7 +39,7 @@ def monte_carlo_errors(N_maps, method, params):
 
     # Unpack params.
     if method == 'deproj_dists':
-        N_grid, inc_lst, pa_lst, xi, yi, d_f, e_d_f, dep_dist_i_PA_vals =\
+        inc_lst, pa_lst, xi, yi, d_f, e_d_f, dep_dist_i_PA_vals =\
             params
     elif method == 'perp_d_fix_plane':
         inc_lst, pa_lst, xi, yi, dm_f, e_dm_f, rho_f, phi_f, gal_dist,\
@@ -56,7 +56,7 @@ def monte_carlo_errors(N_maps, method, params):
             # ASteCA distance moduli + astropy.
             rand_dist = draw_rand_dep_dist(d_f, e_d_f)
             # Obtain density map of CCC (z) values.
-            z = m1_ccc_map(dep_dist_i_PA_vals, rand_dist, N_grid)
+            z = m1_ccc_map(dep_dist_i_PA_vals, rand_dist)
 
             # Obtain (finer) interpolated angles-CCC density map.
             # Rows in zi correspond to inclination values.

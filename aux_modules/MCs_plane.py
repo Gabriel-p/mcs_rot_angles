@@ -168,7 +168,7 @@ def inv_trans_eqs(x_p, y_p, z_p, theta, inc):
     return x, y, z
 
 
-def make_plot(D_0, inc, theta, cl_xyz, cl_xyz_nf, dm_f, dm_nf, x_e, y_e, z_e):
+def make_plot(D_0, inc, theta, cl_xyz, cl_xyz_nf, dm_f, x_e, y_e, z_e):
     """
     Original link for plotting intersecting planes:
     http://stackoverflow.com/a/14825951/1391441
@@ -303,8 +303,7 @@ def plot_bulge_plane(ra_g, dec_g, dm_g, e_dm_g, D_0, gal_cent, glx_inc, theta):
     N_ran = 2
     x_e, y_e, z_e = get_ellipse(N_ran, rho_f, phi_f, D_0, dm_f, e_dm_f)
 
-    make_plot(D_0, glx_inc, theta, cl_xyz, cl_xyz_nf, dm_f, dm_nf,
-              x_e, y_e, z_e)
+    make_plot(D_0, glx_inc, theta, cl_xyz, cl_xyz_nf, dm_f, x_e, y_e, z_e)
 
 
 if __name__ == "__main__":
