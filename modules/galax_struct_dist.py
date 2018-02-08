@@ -134,6 +134,7 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
                 pa_best.append(pa_b)
                 print('  Best fit for rotation angles obtained.')
 
+                # For plotting.
                 # Retrieve the CCC value and the sum of the abs values of
                 # the deprojected distances, for the distances to the plane
                 # generated via the best fit rotation angles, versus the
