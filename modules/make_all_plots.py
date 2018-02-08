@@ -339,7 +339,7 @@ def diag_plots(in_pars):
     # Colorbar.
     cbar = plt.colorbar(SC, cax=color_axis)
     if i == 2:
-        cbar.set_label(r'$log(aye/yr)_{ASteCA}$', fontsize=xy_font_s + 1,
+        cbar.set_label(r'$log(age/yr)_{ASteCA}$', fontsize=xy_font_s + 1,
                        labelpad=4, y=0.5)
     cbar.ax.tick_params(labelsize=xy_font_s - 3)
 
