@@ -9,10 +9,27 @@ def perp_error(params, xyz):
     distance of the points in 'xyz', to the plane defined by the
     coefficients 'a,b,c,d'.
     """
-    a, b, c, d = params
-    x, y, z = xyz
-    length = np.sqrt(a**2 + b**2 + c**2)
-    return (np.abs(a * x + b * y + c * z + d).sum() / length) / len(x)
+    theta, inc, d = params
+
+    # Only accept angles between these ranges:
+    # theta: [90., 270.]   ;   i: [0., 90.]
+    if np.pi / 2. < theta < np.pi * 1.5 and 0. < inc < np.pi / 2.:
+
+        x, y, z = xyz
+
+        a = - np.sin(theta) * np.sin(inc)
+        b = np.cos(theta) * np.sin(inc)
+        c = np.cos(inc)
+
+        length = np.sqrt(a**2 + b**2 + c**2)
+        dist = (np.abs(a * x + b * y + c * z + d).sum() / length) / len(x)
+
+    else:
+        # If any angle is outside those ranges, return a large average distance
+        # so this solution will be rejected.
+        dist = 10.
+
+    return dist
 
 
 def m3_min_perp_distance(x, y, z, N_min):
@@ -27,14 +44,17 @@ def m3_min_perp_distance(x, y, z, N_min):
     Source: http://stackoverflow.com/a/35118683/1391441
     """
     def unit_length(params):
-        a, b, c, d = params
+        theta, inc = params[:2]
+        a = - np.sin(theta) * np.sin(inc)
+        b = np.cos(theta) * np.sin(inc)
+        c = np.cos(inc)
         return a**2 + b**2 + c**2 - 1
 
     # Remove units from the x,y,z coordinates of the points passed.
     x, y, z = x.value, y.value, z.value
 
-    # Random initial guess for the a,b,c,d plane coefficients.
-    initial_guess = np.random.uniform(-10., 10., 4)
+    # Random initial guess for the (theta, i) angles and the 'd' coefficient.
+    initial_guess = (3.9, .5, 0.)
 
     # # Similar as the block below, but using a simpler random sampling
     # # algorithm. In several tests both methods gave the same coefficients,
@@ -70,6 +90,10 @@ def m3_min_perp_distance(x, y, z, N_min):
     min_kwargs = {"constraints": cons, "args": [x, y, z]}
     sol = optimize.basinhopping(
         perp_error, initial_guess, minimizer_kwargs=min_kwargs, niter=N_min)
-    abcd = list(sol.x)
 
-    return abcd
+    # Extract best fit theta and inc
+    theta, inc = sol.x[:2]
+    # averaged absolute distances for these angle values.
+    d_p = sol.fun
+
+    return np.rad2deg(theta), np.rad2deg(inc), d_p

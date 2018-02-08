@@ -26,7 +26,7 @@ def procParams(run='fast'):
     Define all the parameters needed for processing the data.
     """
     # Ranges for the grid of inclination and position angles.
-    inc_rang, pa_rang = [0., 89.], [90., 179.]
+    inc_rang, pa_rang = [0., 89.], [80., 179.]
 
     # Grid limits (used only for plotting).
     xmin, xmax = inc_rang[0] - 0.1, inc_rang[1] + 0.1
@@ -55,7 +55,7 @@ def procParams(run='fast'):
     # cluster is randomly drawn from a normal probability distribution.
     # Used to assign errors to the best fit angle values.
     # Default is 500.  Lower this value for faster processing.
-    N_maps = 10 if run == 'fast' else 500
+    N_maps = 10 if run == 'fast' else 100
 
     # List of minimum projected angular distance values to use as filter.
     # The value is used as: (r_min...]

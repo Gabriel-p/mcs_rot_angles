@@ -17,13 +17,13 @@ def ccc_sum_d_for_best_fit(gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
     2. The sum of absolute values of the perpendicular distances to the plane.
 
     Return also the deprojected distances on the fitted plane, for plotting.
+    THIS ASSUMES THAT THE INCLINED PLANE IS OBTAINED BY ROTATING TWICE
+    THE (x,y,z) SYSTEM. THE VALUES GIVEN FOR THE ANGLES OBTAINED WITH THE
+    FREE PLANE BEST FIT METHOD WILL THUS REPRESENT AN APPROXIMATION OF
+    THE ACTUAL VALUES IF THE (x',y') PLANE INTERSECTED THE (x,y) PLANE
+    THROUGH THE ORIGIN (ie: IF  d=0 IN THE PLANE'S EQUATION)
+
     """
-    # Deprojected distances obtained using the best-fit angles.
-    # THIS ASSUMES THAT THE INCLINED PLANE IS OBTAINED BY ROTATING TWICE
-    # THE (x,y,z) SYSTEM. THE VALUES GIVEN FOR THE ANGLES OBTAINED WITH THE
-    # FREE PLANE BEST FIT METHOD WILL THUS REPRESENT AN APPROXIMATION OF
-    # THE ACTUAL VALUES IF THE (x',y') PLANE INTERSECTED THE (x,y) PLANE
-    # THROUGH THE ORIGIN (ie: IF  d=0 IN THE PLANE'S EQUATION)
     dep_dist_kpc = get_deproj_dist(
         Angle(pa_b, unit=u.degree), Angle(inc_b, unit=u.degree), gal_dist,
         rho_f, phi_f)
@@ -34,14 +34,11 @@ def ccc_sum_d_for_best_fit(gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
     if method in ['deproj_dists', 'perp_d_fix_plane']:
         # Convert best fit PA to theta.
         theta = pa_b + 90.
-        # Plane coefficients according to Eq (6) in vdM&C01 for z'=0.
-        a = -1. * np.sin(np.deg2rad(theta)) * np.sin(np.deg2rad(inc_b))
-        b = np.cos(np.deg2rad(theta)) * np.sin(np.deg2rad(inc_b))
-        c = np.cos(np.deg2rad(inc_b))
-        d = 0.
-        abcd = [a, b, c, d]
-        sum_d_b = perp_error(abcd, xyz)
+        # Radian to degrees, use d=0.
+        theta, inc, d = np.deg2rad(theta), np.deg2rad(inc_b), 0.
+        sum_d_b = perp_error((theta, inc, d), xyz)
+
     elif method == 'perp_d_free_plane':
-        sum_d_b = perp_error(best_angles_pars, xyz)
+        sum_d_b = best_angles_pars[2]
 
     return dep_dist_kpc, ccc_b, sum_d_b
