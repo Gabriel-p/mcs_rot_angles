@@ -105,7 +105,7 @@ def main():
     # Processing parameters.
     # Set the 'run' parameter to 'fast' for quick processing. Anything else
     # will process the data with default values.
-    run = 'fast'
+    run = 'fast2'
     xmin, xmax, ymin, ymax, inc_lst, pa_lst, plane_abc, N_f, xi, yi, N_min,\
         N_maps, rho_lst, r_idx_save, method_3d, dpi = procParams(run)
 

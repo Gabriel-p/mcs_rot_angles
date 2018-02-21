@@ -2,7 +2,6 @@
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Distance
 import numpy as np
-from .MCs_data import MCs_data
 
 
 def dist_err_mag_2_pc(d_pc, e_dm, e_E):
@@ -72,14 +71,12 @@ def dist_err_2_pts(d_pc, c1, e_r_0, c2, e_r):
     return e_d_pc
 
 
-def main(gal, ra_deg, dec_deg, dist_mod, e_dm):
+def main(gal_center, gal_dist, gal_e_dm, ra_deg, dec_deg, dist_mod, e_dm):
     '''
     Obtain the 3D distance in parsecs between the center of a cluster and
     the center of the Magellanic cloud it belongs to.
     '''
 
-    # Retrieve the galaxy's center coords and distance modulus (and its error).
-    gal_center, gal_dist, gal_e_dm = MCs_data(gal)
     # Obtain error in distance in parsecs. Use 0. error in extinction since
     # this is the true distance modulus.
     e_gal_dist_pc = dist_err_mag_2_pc(gal_dist, gal_e_dm, 0.)
@@ -108,7 +105,7 @@ def main(gal, ra_deg, dec_deg, dist_mod, e_dm):
     # Error for the 3D distance.
     e_d_pc = dist_err_2_pts(dist_pc, c1, e_gal_dist_pc, c2, e_cl_dist_pc)
 
-    return dist_pc.kpc, e_d_pc.kpc, gal_center, gal_dist
+    return dist_pc.kpc, e_d_pc.kpc
 
 
 if __name__ == "__main__":

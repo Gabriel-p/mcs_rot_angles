@@ -22,7 +22,7 @@ def zDist(N):
     """
 
     # Define maximum vertical distance (in parsec)
-    z_dist = 2000.
+    z_dist = 5000.
     # Generate N random z' vertical distances, in parsec.
     # To generate the *same* values each time the code is executed, fix the
     # random seed to any integer value.

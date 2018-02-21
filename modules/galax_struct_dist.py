@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from modules import dist2CloudCenter
 from modules import dist_filter
 from modules import i_PA_DeprjDist
+from .MCs_data import MCs_data
 from .xyz_coords import xyz_coords
 from .interp_dens_map import interp_dens_map
 from .best_fit_angles import get_angles
@@ -40,11 +41,18 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
         # ASteCA ages for clusters that belong to this galaxy.
         age_g = gal['log(age)']
 
+        # Retrieve the galaxy's center coords, distance (in parsecs), and
+        # its error.
+        gal_cent, gal_dist, gal_e_dm = MCs_data(j)
+
+        # Obtain angular projected distance and position angle for the
+        # clusters in the galaxy.
+        rho_g, phi_g = dist_filter.get_rho_phi(ra_g, dec_g, gal_cent)
+
         # 3D distance from clusters to galaxy center, and its error. Both
         # values are expressed in kilo-parsecs.
-        # Also, center coordinates and distance (in parsecs) to this galaxy.
-        d_d_g, e_dd_g, gal_cent, gal_dist = dist2CloudCenter.main(
-            j, ra_g, dec_g, dm_g, e_dm_g)
+        d_d_g, e_dd_g = dist2CloudCenter.main(
+            gal_cent, gal_dist, gal_e_dm, ra_g, dec_g, dm_g, e_dm_g)
 
         for r_idx, r_min in enumerate(rho_lst):
 
@@ -53,7 +61,7 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
             # coordinates for the center of the galaxy.
             ra_f, dec_f, age_f, d_d_f, e_dd_f, dm_f, e_dm_f, rho_f, phi_f =\
                 dist_filter.main(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g,
-                                 dm_g, e_dm_g, gal_cent)
+                                 dm_g, e_dm_g, rho_g, phi_g)
 
             # Deprojected distance values for each cluster, for each rotated
             # plane defined by each (i, PA) in the grid.
@@ -64,7 +72,7 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
                    ' allowed: {}'.format(r_min)))
 
             # Obtain coordinates of filtered clusters in the (x,y,z) system.
-            # Used by Method-1 and Method-2 below.
+            # Used by Method-2 and Method-3 below.
             # These coordinates depend on both the center and the distance
             # to the analyzed galaxy.
             cl_x, cl_y, cl_z = xyz_coords(
@@ -167,6 +175,54 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
 
                 # Store parameters for density maps and 1:1 diagonal plots.
                 if r_idx == r_idx_save:
+
+                    # import matplotlib.pyplot as plt
+                    # plt.style.use('seaborn-darkgrid')
+                    # fig = plt.figure()
+                    # fig.suptitle(
+                    #     "Method: {} (rho_min={})".format(method, r_min))
+                    # i_mean, pa_mean = np.mean(
+                    #     np.asarray(inc_pa_mcarlo), axis=0)
+
+                    # plt.subplot(121)
+                    # plt.title("Position angle")
+                    # plt.axvline(
+                    #     x=pa_b, c='g', lw=2.5,
+                    #     label=r"$PA$ = {:.1f}".format(pa_b))
+                    # plt.hist(
+                    #     np.asarray(inc_pa_mcarlo).T[1], alpha=.75,
+                    #     color='grey', label="MC")
+                    # plt.axvline(
+                    #     x=pa_mean + i_pa_std[1], c='b', ls='--',
+                    #     label="stddev={:.1f}".format(i_pa_std[1]))
+                    # plt.axvline(x=pa_mean - i_pa_std[1], c='b', ls='--')
+                    # plt.axvline(
+                    #     x=pa_mean, c='r',
+                    #     label=r"$PA_{{mean}}$ = {:.1f}".format(pa_mean))
+                    # plt.legend()
+                    # plt.xlim(0., 180.)
+
+                    # plt.subplot(122)
+                    # plt.title("Inclination angle")
+                    # plt.axvline(
+                    #     x=inc_b, c='g', lw=2.5,
+                    #     label=r"$i$ = {:.1f}".format(inc_b))
+                    # plt.hist(
+                    #     np.asarray(inc_pa_mcarlo).T[0], alpha=.75,
+                    #     color='grey', label="MC")
+                    # plt.axvline(
+                    #     x=i_mean + i_pa_std[0], c='b', ls='--',
+                    #     label="stddev={:.1f}".format(i_pa_std[0]))
+                    # plt.axvline(x=i_mean - i_pa_std[0], c='b', ls='--')
+                    # plt.axvline(
+                    #     x=i_mean, c='r',
+                    #     label=r"$i_{{mean}}$ = {:.1f}".format(i_mean))
+                    # plt.legend()
+                    # plt.xlim(0., 90.)
+
+                    # plt.show()
+                    # plt.close('all')
+
                     # Density maps.
                     gal_str_pars[0].append(
                         [xmin, xmax, ymin, ymax, xi, yi, dens_vals_interp,

@@ -46,17 +46,12 @@ def get_rho_phi(ra, dec, gal_cent):
     return rho, phi
 
 
-def main(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g, dm_g, e_dm_g,
-         gal_cent):
+def main(r_min, ra_g, dec_g, age_g, d_d_g, e_dd_g, dm_g, e_dm_g, rho_g, phi_g):
     """
     Filter clusters based on their projected angular distances 'rho'.
 
     Values are used as: (r_min, r_max]
     """
-
-    # Obtain angular projected distance and position angle for the
-    # clusters in the galaxy.
-    rho_g, phi_g = get_rho_phi(ra_g, dec_g, gal_cent)
 
     ra_f, dec_f, age_f, d_d_f, e_dd_f, dm_f, e_dm_f, rho_f, phi_f =\
         [], [], [], [], [], [], [], [], []
