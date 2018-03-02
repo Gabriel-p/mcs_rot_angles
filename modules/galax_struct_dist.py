@@ -79,8 +79,8 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
                 rho_f, phi_f, gal_dist, np.asarray(dm_f))
 
             # Run once for each method defined.
-            inc_best, pa_best, mc_inc_std, mc_pa_std, in_mcarlo, pa_mcarlo,\
-                ccc_sum_d_best = [], [], [], [], [], [], []
+            inc_best, pa_best, d_best, mc_inc_std, mc_pa_std, in_mcarlo,\
+                pa_mcarlo, ccc_sum_d_best = [], [], [], [], [], [], [], []
             # Method 1: deproj_dists
             # Method 2: perp_d_fix_plane
             # Method 3: perp_d_free_plane
@@ -135,11 +135,12 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
                         inc_lst, pa_lst, xi, yi, pl_dists_kpc)
 
                 # Best fit angles for the density map with no random sampling.
-                inc_b, pa_b = get_angles(method, best_angles_pars)
+                inc_b, pa_b, d_coeff = get_angles(method, best_angles_pars)
                 # Save best fit angles obtained with all methods. Their
                 # average is the final value for each rotation angle.
                 inc_best.append(inc_b)
                 pa_best.append(pa_b)
+                d_best.append(d_coeff)
                 print('  Best fit for rotation angles obtained.')
 
                 # For plotting.
@@ -234,12 +235,12 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
                          ccc_sum_d_best, '', '', '', ''])
 
             if r_idx == r_idx_save:
-                method_3d = 1
                 i = Angle(inc_best[method_3d], unit='deg')
                 pa = Angle(pa_best[method_3d], unit='deg')
+                d = d_best[method_3d]
                 # Store parameters for the 3D plot.
                 plot_3D_pars[j] = [
-                    gal_dist, i, pa, np.array([cl_x, cl_y, cl_z]), dm_f]
+                    gal_dist, i, pa, d, np.array([cl_x, cl_y, cl_z]), dm_f]
 
             # Number of clusters used in this run. Used for plotting.
             N_clust = len(ra_f)

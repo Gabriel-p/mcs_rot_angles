@@ -16,6 +16,7 @@ def get_angles(method, best_angles_pars):
         max_ccc_idx = np.unravel_index(zi.argmax(), zi.shape)
         # Calculate "best" angle values.
         inc_b, pa_b = xi[max_ccc_idx[0]], yi[max_ccc_idx[1]]
+        d = 0.
         # Max CCC value in map.
         # z_b = np.amax(zi)
     elif method == 'perp_d_fix_plane':
@@ -24,11 +25,12 @@ def get_angles(method, best_angles_pars):
         min_d_idx = np.unravel_index(zi.argmin(), zi.shape)
         # Calculate "best" angle values.
         inc_b, pa_b = xi[min_d_idx[0]], yi[min_d_idx[1]]
+        d = 0.
         # Min sum of abs(distances 2 plane) value in map.
         # z_b = np.amin(zi)
     elif method == 'perp_d_free_plane':
-        theta_b, inc_b, d_p = best_angles_pars
+        theta_b, inc_b, d, d_p = best_angles_pars
         # Convert theta to PA
         pa_b = theta_b - 90.
 
-    return inc_b, pa_b
+    return inc_b, pa_b, d

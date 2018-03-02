@@ -87,7 +87,7 @@ def monte_carlo_errors(N_maps, method, params):
             # Store params used to obtain the Monte Carlo errors.
             best_angles_pars = m3_min_perp_distance(x, y, z, N_min)
 
-        inc_b, pa_b = get_angles(method, best_angles_pars)
+        inc_b, pa_b, _ = get_angles(method, best_angles_pars)
 
         inc_pa_mcarlo.append([inc_b, pa_b])
 

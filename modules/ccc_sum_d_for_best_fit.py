@@ -39,6 +39,6 @@ def ccc_sum_d_for_best_fit(gal_dist, rho_f, phi_f, d_d_f, cl_x, cl_y, cl_z,
         sum_d_b = perp_error((theta, inc, d), xyz)
 
     elif method == 'perp_d_free_plane':
-        sum_d_b = best_angles_pars[2]
+        sum_d_b = best_angles_pars[-1]
 
     return dep_dist_kpc, ccc_b, sum_d_b

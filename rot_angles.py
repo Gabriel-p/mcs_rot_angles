@@ -86,6 +86,7 @@ def make_plots(gal_str_pars, rho_plot_pars, plot_3D_pars, dpi):
     print('Rho min plot done.')
     make_3Dplot(plot_3D_pars, dpi)
     print('3D plot done.')
+
     # make_dist_2_cents(in_params)
     # print('Distances to center of MC done.')
 

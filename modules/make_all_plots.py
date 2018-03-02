@@ -535,7 +535,7 @@ def inv_trans_eqs(x_p, y_p, z_p, theta, inc):
     return x, y, z
 
 
-def plotAxis(ax, D_0, inc, theta, cl_xyz, dm_f):
+def plotAxis(ax, D_0, inc, theta, d, cl_xyz, dm_f):
     # Plot clusters in x,y,z system.
     x_cl, y_cl, z_cl = cl_xyz
     if cl_xyz.size:
@@ -571,9 +571,9 @@ def plotAxis(ax, D_0, inc, theta, cl_xyz, dm_f):
 
     # Rotated plane.
     X2_t, Y2_t = np.meshgrid([min_X, max_X], [0, max_Y])
-    Z2_t = (-a * X2_t - b * Y2_t) / c
+    Z2_t = (-a * X2_t - b * Y2_t - d) / c
     X2_b, Y2_b = np.meshgrid([min_X, max_X], [min_Y, 0])
-    Z2_b = (-a * X2_b - b * Y2_b) / c
+    Z2_b = (-a * X2_b - b * Y2_b - d) / c
 
     # Top half of first x',y' inclined plane.
     ax.plot_surface(X2_t, Z2_t, Y2_t, color='red', alpha=.2, lw=0, zorder=3)
@@ -618,12 +618,12 @@ def make_3Dplot(plot_3D_pars, dpi):
     gal_name = ['SMC', 'LMC']
     for i, pars in enumerate(plot_3D_pars):
 
-        D_0, inc, theta, cl_xyz, dm_f = pars
+        D_0, inc, theta, d, cl_xyz, dm_f = pars
 
         for j in [0, 1]:
             ax = fig.add_subplot(gs[(i, j)], projection='3d')
 
-            SC = plotAxis(ax, D_0, inc, theta, cl_xyz, dm_f)
+            SC = plotAxis(ax, D_0, inc, theta, d, cl_xyz, dm_f)
 
             # Orientation of 3D axis.
             if j == 0:

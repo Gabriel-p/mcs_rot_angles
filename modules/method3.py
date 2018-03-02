@@ -91,9 +91,9 @@ def m3_min_perp_distance(x, y, z, N_min):
     sol = optimize.basinhopping(
         perp_error, initial_guess, minimizer_kwargs=min_kwargs, niter=N_min)
 
-    # Extract best fit theta and inc
-    theta, inc = sol.x[:2]
+    # Extract best fit theta, inc, and 'd' coefficient.
+    theta, inc, d = sol.x
     # averaged absolute distances for these angle values.
     d_p = sol.fun
 
-    return np.rad2deg(theta), np.rad2deg(inc), d_p
+    return np.rad2deg(theta), np.rad2deg(inc), d, d_p

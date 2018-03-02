@@ -119,6 +119,9 @@ Produce final plots.
 
 __________________________________________________
 
+[Subramanian & Subramaniam (2015)][3] (SMC),
+[Subramanian & Subramaniam (2010)][4] (LMC)
+
 ![alt tag](/S-LMC_i_pa.png)
 
 ![alt tag](/inno_2016.png)
@@ -127,3 +130,5 @@ __________________________________________________
 __________________________
 [1]: http://adsabs.harvard.edu/abs/2001AJ....122.1807V
 [2]: http://adsabs.harvard.edu/abs/2002AJ....124.2639V
+[3]: http://arxiv.org/abs/1410.7588
+[4]: http://adsabs.harvard.edu/abs/2010A%26A...520A..24S
