@@ -55,12 +55,12 @@ def procParams(run='fast'):
     # cluster is randomly drawn from a normal probability distribution.
     # Used to assign errors to the best fit angle values.
     # Default is 500.  Lower this value for faster processing.
-    N_maps = 10 if run == 'fast' else 100
+    N_maps = 10 if run == 'fast' else 2
 
     # List of minimum projected angular distance values to use as filter.
     # The value is used as: (r_min...]
     rho_lst = [0., 0.5, 1.] if run == 'fast' else\
-        [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4.]
+        [0., 0.5, 1.]  #, 1.5, 2., 2.5, 3., 3.5, 4.]
 
     # Select index of rho_lst value to plot below the density maps.
     r_idx_save = 2
@@ -100,6 +100,8 @@ def main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
+    # for zvar in ['500', '1000', '1500', '2000', '2250', '2500', '2750', '3000']:
+        # print(zvar)
     # Read input data for both galaxies from file.
     smc_data, lmc_data = readData.main(r_path)
 

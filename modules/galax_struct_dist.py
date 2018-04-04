@@ -54,6 +54,8 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
         d_d_g, e_dd_g = dist2CloudCenter.main(
             gal_cent, gal_dist, gal_e_dm, ra_g, dec_g, dm_g, e_dm_g)
 
+        cl_xyz_all = xyz_coords(rho_g, phi_g, gal_dist, dm_g)
+
         for r_idx, r_min in enumerate(rho_lst):
 
             # Filter clusters by distance to center of galaxy.
@@ -240,7 +242,7 @@ def gsd(smc_data, lmc_data, xmin, xmax, ymin, ymax, inc_lst, pa_lst,
                 d = d_best[method_3d]
                 # Store parameters for the 3D plot.
                 plot_3D_pars[j] = [
-                    gal_dist, i, pa, d, np.array([cl_x, cl_y, cl_z]), dm_f]
+                    gal_dist, i, pa, d, np.array(cl_xyz_all), dm_g]
 
             # Number of clusters used in this run. Used for plotting.
             N_clust = len(ra_f)
